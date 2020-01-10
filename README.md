@@ -5,7 +5,11 @@ This is my first real public Project, so I need to learn quite a lot about manag
 Other than that, just having fun learning and creating things, and hope everyone else will too. ^^
 
 TODO:
+
 Setup Rust Dev Environment for IDEA.
+
 Setup a Localization Library, because I don't want to accidentially miss any localizable Text when designing the UI.
+
 Setup Amethyst and make a Basic Launcher UI.
+
 Make a proper ReadMe once more stuff such as libraries has been set up.
