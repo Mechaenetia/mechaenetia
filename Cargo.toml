@@ -1,5 +1,5 @@
 [package]
-name = "Mechaenetia"
+name = "mechaenetia"
 version = "0.1.0"
 authors = ["Gregorius Techneticies <gregoriustech@gmail.com>", "OvermindDL1 <overminddl1@gmail.com>"]
 edition = "2018"
