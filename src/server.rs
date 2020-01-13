@@ -3,8 +3,7 @@ use log::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-
-mod init;
+pub mod init;
 
 #[derive(StructOpt, Debug)]
 #[structopt(
