@@ -12,9 +12,11 @@ mod init;
 	about = "Pure Server implementation of Mechaenetia"
 )]
 pub struct CLIOpts {
+	/// Logging verbosity, add more to be more verbose
 	#[structopt(short, long, parse(from_occurrences))]
 	verbose: u8,
 
+	/// Path to a directory to store configuration files
 	#[structopt(short, long, parse(from_os_str))]
 	config_dir: Option<PathBuf>,
 }
