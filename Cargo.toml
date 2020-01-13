@@ -7,9 +7,23 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+log = "0.4"
+log4rs = {version = "0.9.0", features = ["all_components", "gzip", "file", "yaml_format"]}
+structopt = "0.3"
+serde_derive = "1.0.104"
+serde = {version = "1.0.104", features=["derive"]}
+serde_json = "1.0.44"
+anyhow = "1.0.25"
+thiserror = "1.0.9"
 
-[workspace]
-members = [
-	".",
-]
+[lib]
+name = "mechaenetia"
+path = "src/mechaenetia/lib.rs"
 
+[[bin]]
+name = "client"
+path = "src/client.rs"
+
+[[bin]]
+name = "server"
+path = "src/server.rs"
