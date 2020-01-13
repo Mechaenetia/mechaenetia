@@ -20,7 +20,7 @@ root:
 "#;
 
 /// Initializes the logging system, panics on failure
-pub fn init_logging(config_dir: Option<PathBuf>) -> anyhow::Result<()> {
+pub fn init_logging(config_dir: &Option<PathBuf>) -> anyhow::Result<()> {
 	match config_dir {
 		Some(path) => {
 			if !path.is_dir() {
