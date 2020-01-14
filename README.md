@@ -4,6 +4,7 @@ Repository for the Game Mechaenetia
 This is my first real public Project, so I need to learn quite a lot about managing things.
 Other than that, just having fun learning and creating things, and hope everyone else will too. ^^
 
+
 TODO:
 
 Setup Rust Dev Environment for IDEA.
