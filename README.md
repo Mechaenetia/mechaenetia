@@ -14,4 +14,4 @@ Setup Amethyst and make a Basic Launcher UI.
 
 Setup a Default Workspace of sorts.
 
-Make a proper ReadMe once more stuff such as libraries has been set up.
+Make a proper ReadMe once more stuff such as Libraries has been set up.
