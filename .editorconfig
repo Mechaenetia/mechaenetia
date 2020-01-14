@@ -1,9 +1,9 @@
 [*]
 # Making sure Linux doesn't complain.
 insert_final_newline = true
-# Superior to Spaces due to letting near blind people configure their Size, and I respect handicapped people.
+# Superior to Spaces due to letting near blind people configure their Size, and we respect handicapped people.
 indent_style = tab
-# The only proper way of Unicode.
+# The only proper way of handling Unicode.
 charset = utf-8
 # Required to be false because of Bugs.
 trim_trailing_whitespace = false
