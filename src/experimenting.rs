@@ -1,0 +1,85 @@
+use amethyst::{
+	assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+	core::transform::TransformBundle,
+//	input::is_key_down,
+	prelude::*,
+	renderer::{
+		plugins::{RenderShaded3D, RenderToWindow},
+		rendy::mesh::{Normal, Position, TexCoord},
+		types::DefaultBackend,
+		RenderingBundle,
+	},
+	utils::{application_root_dir, scene::BasicScenePrefab},
+	winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+};
+
+type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
+
+
+//struct Chunk {data: [[[u8; 16]; 16]; 16]}
+
+struct GameState;
+impl SimpleState for GameState {
+	fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+		println!("Starting Game!");
+		let handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
+			loader.load("prefab/sphere.ron", RonFormat, ())
+		});
+		data.world.create_entity().with(handle).build();
+	}
+	fn handle_event(
+		&mut self,
+		_: StateData<'_, GameData<'_, '_>>,
+		event: StateEvent,
+	) -> SimpleTrans {
+		if let StateEvent::Window(event) = &event {
+			match event {
+				Event::WindowEvent { event, .. } => match event {
+					WindowEvent::KeyboardInput {
+						input:
+						KeyboardInput {
+							virtual_keycode: Some(VirtualKeyCode::Escape),
+							..
+						},
+						..
+					}
+					| WindowEvent::CloseRequested => Trans::Quit,
+					_ => Trans::None,
+				},
+				_ => Trans::None,
+			}
+		} else {
+			Trans::None
+		}
+	}
+	fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+		//	println!("Computing Update...");
+		Trans::None
+	}
+}
+
+pub fn amethyststuff() -> amethyst::Result<()> {
+	// Always First!
+	amethyst::start_logger(amethyst::LoggerConfig::default());
+	
+	let app_root = application_root_dir()?;
+	let display_config_path = app_root.join("config/display.ron");
+	let assets_directory = app_root.join("assets/");
+	
+	let game_data = GameDataBuilder::default()
+		.with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+		.with_bundle(TransformBundle::new())?
+		.with_bundle(
+			RenderingBundle::<DefaultBackend>::new()
+				.with_plugin(
+					RenderToWindow::from_config_path(display_config_path)
+						.with_clear([0.34, 0.36, 0.52, 1.0]),
+				)
+				.with_plugin(RenderShaded3D::default()),
+		)?;
+	
+	let mut game = Application::new(assets_directory, GameState, game_data)?;
+	game.run();
+	
+	Ok(())
+}
