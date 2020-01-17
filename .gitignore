@@ -42,3 +42,5 @@ Cargo.lock
 
 # Rust Source files in `/src/`
 !/src/**/*.rs
+!/assets/**/*
+!/config/**/*
