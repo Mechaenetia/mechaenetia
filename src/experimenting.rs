@@ -13,10 +13,25 @@ use amethyst::{
 	winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
 };
 
+// This part prevents us from updating Amethyst.
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
-
-//struct Chunk {data: [[[u8; 16]; 16]; 16]}
+// Definitely not gonna be the final Chunk System. But imagine the Game was that small. XD
+// Each of the Bits represents one of the Vertices being active/inactive for Marching Cubes Render.
+struct Chunk {data: [[[u8; 4]; 4]; 4]}
+impl Chunk {
+	// in this example I only have Full Blocks and Empty Blocks, no Slopes or such.
+	// the Result of this Array should be reminiscent of an Egg.
+	// I can only guess which way the Egg is gonna be rotated, but this is just some hardcoded Test.
+	fn new() -> Self {
+		Chunk { data : [
+		[[  0,  0,  0,  0],[  0,255,255,  0],[255,255,255,255],[  0,255,255,  0]],
+		[[  0,255,255,  0],[255,255,255,255],[255,255,255,255],[255,255,255,255]],
+		[[  0,255,255,  0],[255,255,255,255],[255,255,255,255],[255,255,255,255]],
+		[[  0,  0,  0,  0],[  0,255,255,  0],[255,255,255,255],[  0,255,255,  0]]
+		]}
+	}
+}
 
 struct GameState;
 impl SimpleState for GameState {
@@ -65,6 +80,9 @@ pub fn amethyststuff() -> amethyst::Result<()> {
 	let app_root = application_root_dir()?;
 	let display_config_path = app_root.join("config/display.ron");
 	let assets_directory = app_root.join("assets/");
+	
+	let _chunk = Chunk::new();
+	
 	
 	let game_data = GameDataBuilder::default()
 		.with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
