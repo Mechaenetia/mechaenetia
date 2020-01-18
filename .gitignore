@@ -26,6 +26,9 @@ Cargo.lock
 # Github specific files
 !/.github/*
 
+# Meta Project Files
+!/.meta/**/*
+
 # IDEA specific run configurations
 !/.idea/runConfigurations/*.xml
 
