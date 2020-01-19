@@ -1,0 +1,3 @@
+This Font was made for the sole purpose of being barely yet still somewhat readable.
+The intended use is putting those 3x3 Pixel Characters centered on a 4x4 Pixel Area (having half a pixel space in all 4 directions)
+That way less important things can be written on Ingame Objects without breaking the Art Style as a whole.
