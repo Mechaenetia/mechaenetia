@@ -27,7 +27,7 @@ fn main() -> anyhow::Result<()> {
 	info!("Hello, world!");
 	debug!("Opts:  {:?}", &opts);
 	
-	experimenting::amethyststuff().unwrap();
+	experimenting::start().unwrap();
 	
 	Ok(())
 }
