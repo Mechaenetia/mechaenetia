@@ -1,11 +1,10 @@
 use amethyst::{
 	assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
 	core::transform::TransformBundle,
-//	input::is_key_down,
 	prelude::*,
 	renderer::{
 		plugins::{RenderShaded3D, RenderToWindow},
-		rendy::mesh::{Normal, Position, TexCoord},
+		rendy::mesh::{Normal, Position, TexCoord, MeshBuilder},
 		types::DefaultBackend,
 		RenderingBundle,
 	},
@@ -38,12 +37,18 @@ impl SimpleState for GameState {
 	fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 		println!("Starting Game!");
 		
-		let _chunk = Chunk::new();
+		let chunk = Chunk::new();
 		
+		let mut builder = MeshBuilder::new();
 		
-		
-		
-		
+		for x in 0..chunk.data.len() {
+			for y in 0..chunk.data[x].len() {
+				for z in 0..chunk.data[x][y].len() {
+					let value = chunk.data[x][y][z];
+					println!("{}; {}; {}; {}", x, y, z, value);
+				}
+			}
+		}
 		
 		
 //		let handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
@@ -54,7 +59,6 @@ impl SimpleState for GameState {
 	
 	
 	fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-		println!("Computing Update...");
 		Trans::None
 	}
 	
@@ -64,7 +68,6 @@ impl SimpleState for GameState {
 		_: StateData<'_, GameData<'_, '_>>,
 		event: StateEvent,
 	) -> SimpleTrans {
-		println!("Computing Inputs...");
 		if let StateEvent::Window(event) = &event {
 			match event {
 				Event::WindowEvent { event, .. } => match event {

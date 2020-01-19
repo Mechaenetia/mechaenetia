@@ -51,8 +51,8 @@ pub fn init_logging(config_dir: &Option<PathBuf>) -> anyhow::Result<()> {
 
 			let config = Config::builder()
 				.appender(Appender::builder().build("stderr", Box::new(stderr)))
-				.logger(Logger::builder().build("tbsserver", LevelFilter::Trace))
-				.build(Root::builder().appender("stderr").build(LevelFilter::Trace))
+				.logger(Logger::builder().build("tbsserver", LevelFilter::Warn))
+				.build(Root::builder().appender("stderr").build(LevelFilter::Warn))
 				.with_context(|| {
 					format!("Failed to internally configure the log4rs logging system")
 				})?;
