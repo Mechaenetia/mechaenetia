@@ -37,16 +37,34 @@ struct GameState;
 impl SimpleState for GameState {
 	fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 		println!("Starting Game!");
-		let handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-			loader.load("prefab/sphere.ron", RonFormat, ())
-		});
-		data.world.create_entity().with(handle).build();
+		
+		let _chunk = Chunk::new();
+		
+		
+		
+		
+		
+		
+		
+//		let handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
+//			loader.load("prefab/sphere.ron", RonFormat, ())
+//		});
+//		data.world.create_entity().with(handle).build();
 	}
+	
+	
+	fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+		println!("Computing Update...");
+		Trans::None
+	}
+	
+	
 	fn handle_event(
 		&mut self,
 		_: StateData<'_, GameData<'_, '_>>,
 		event: StateEvent,
 	) -> SimpleTrans {
+		println!("Computing Inputs...");
 		if let StateEvent::Window(event) = &event {
 			match event {
 				Event::WindowEvent { event, .. } => match event {
@@ -67,22 +85,15 @@ impl SimpleState for GameState {
 			Trans::None
 		}
 	}
-	fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-		//	println!("Computing Update...");
-		Trans::None
-	}
 }
 
-pub fn amethyststuff() -> amethyst::Result<()> {
+pub fn start() -> amethyst::Result<()> {
 	// Always First!
 	amethyst::start_logger(amethyst::LoggerConfig::default());
 	
 	let app_root = application_root_dir()?;
 	let display_config_path = app_root.join("config/display.ron");
 	let assets_directory = app_root.join("assets/");
-	
-	let _chunk = Chunk::new();
-	
 	
 	let game_data = GameDataBuilder::default()
 		.with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
