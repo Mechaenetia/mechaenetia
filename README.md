@@ -10,7 +10,7 @@ https://forum.mechaenetia.com
 
 TODO:
 
-Stop getting distracted by Factorio and GT6.
+Stop getting distracted by Factorio and GT6, and start learning Stuff.
 
 Setup Rust Dev Environment for IDEA.
 
