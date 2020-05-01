@@ -47,3 +47,4 @@ Cargo.lock
 !/src/**/*.rs
 !/assets/**/*
 !/config/**/*
+!/docs/**/*
