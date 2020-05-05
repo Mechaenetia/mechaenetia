@@ -1,81 +1,169 @@
 digraph G {
-Universe->Galaxy->Systems,Skybox_Lights
-Systems->Skybox_Lights->Systems->Space_Objects
-Space_Objects->Gravity,Magnetic_Fields,Skybox_Lights
-Space_Objects->Stars->Suns->Environment
-Space_Objects->Planets->Space_Objects,Moons,Environment
-Space_Objects->Moons->Planets,Environment,Oceans,Space_Objects
-Space_Objects->Asteroids->Space_Objects
-Planets,Gravity,Magnetic_Fields->Environment->Places,Climate->Environment
-Asteroids->Meteorites,Comets->Asteroids->Ores
-Environment->Living->Flora,Fauna,Fungi,Algae
-Climate->Weather->Lightning,Wind,Rain,Sunny,Climate
-Rain->Water,Acid,Ashes,Snow,Ice,Sand
-Sunny->Solar_Power->Flora,Algae
-Places->Caves->Lava,Rivers,Lakes,Stone,Gravel
-Places->Islands_and_Continents->Rivers,Stone,Sand,Dirt
-Dirt->Insects,Clay,Stone,Sand
-Lava->Stone,Basalt->Lava->Ashes->Minerals
-Stone->Ores,Gravel
-Ores->Minerals,Flora,Gems
-Ores->Salt->Spices
-Ores,Alloys->Metals->Alloys
-Ores->Oil,Gas->Fuel,Refinery
-Oil->Lubricant
+compound=true;
+
+subgraph cluster1 {
+label="Physics"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+
+Physics->Gravity,Magnetism,Nuclear;
+}
+
+subgraph cluster2 {
+label="Space"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+
+Space->Galaxy,Skybox;
+Galaxy->Systems;
+Systems->Stars->Suns;
+Systems->Planets;
+Planets->Moons;
+Systems->Asteroids->Meteorites,Comets;
+}
+
+Universe->Space[lhead=cluster2];
+Universe->Physics[lhead=cluster1];
+
+subgraph cluster3 {
+label="Environment"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+Physics->Environment[ltail=cluster1,lhead=cluster3];
+Space->Environment[ltail=cluster2,lhead=cluster3];
+
+Environment->Places,Climate;
+Climate->Weather->Lightning,Wind,Rain,Sunny,Clouds;
+Places->Caves,Oceans,Islands_and_Continents;
+Islands_and_Continents,Rain->Springs->Rivers;
+Lakes->Rivers->Lakes,Oceans;
+}
+
+subgraph cluster10 {
+label="H2O"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+
+Water,Snow,Ice,Steam;
+}
+
+subgraph cluster9 {
+label="Dye"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+
+Dye;
+}
+
+subgraph cluster8 {
+label="Food"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+Food->Nutrition->Food;
+Spices,Food->Kitchen->Food[style=bold,color=green];
+Carbs,Protein,Dairy,Fat,Salt,Water,Minerals->Nutrition[style=bold,color=red];
+
+Lactose,Fructose,Dextrose->Sugar->Carbs;
+Milk->Cheese,Yoghurt,Cream;
+Milk,Cream,Cheese,Yoghurt->Fat,Dairy,Lactose;
+Flour->Dough->Bread,Pasta,Cake;
+Cream->Butter->Fat;
+Honey->Sugar->Caramel->Sugar;
+Salt->Spices;
+Juice->Dye;
+Water->Tea;
+}
+
+subgraph cluster4 {
+label="Materials"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+Environment->Materials[ltail=cluster3,lhead=cluster4];
+
+Acid,Base;
+Metals->Alloys->Metals;
+Ores->Salt,Gems,Metals,Minerals,Gas,Oil;
+Stone->Ores,Gravel,Sand;
+Dirt->Soil,Podzol,Clay,Sand;
+Fertilizer->Soil;
+Lava->Basalt->Lava->Ashes;
+Steam->Clouds;
+Wood,Bark->Pulp->Paper;
+Butter->Oil->Lubricant;
+Oil,Gas->Fuel,Refinery;
 Refinery->Fuel,Wax,Plastic,Lubricant
-Rain,Snow,Ice->Springs,Lakes->Rivers->Lakes,Oceans,Ores,Gravel,Clay
+}
+
+subgraph cluster5 {
+label="Living"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+Environment->Living[ltail=cluster3,lhead=cluster5];
+
+Living->Flora,Fauna,Fungi,Algae
+Algae->Dye,Food
+}
+
+subgraph cluster6 {
+label="Fungi"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+Fungi->Mushrooms[ltail=cluster5,lhead=cluster6];
+
+Mushrooms->Spores,Food,Dye;
+}
+
+subgraph cluster7 {
+label="Flora"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+Soil->Flora[ltail=cluster5,lhead=cluster7];
+
+Leaves->Tea
+Oceans->Corals,Needles
+Stone->Moss->Dye,Water,Needles
+Flowers->Leaves,Petals,Pollen,Nectar,Seeds,Needles
+Vines->Leaves,Blossoms,Needles
+Trees_and_Bushes->Leaves,Blossoms,Wood,Bark,Needles
+Ferns->Leaves,Needles
+Cacti->Dye,Water,Needles
+Grass->Seeds,Grain,Leaves,Corn,Needles
+Vegetables->Leaves,Nuts,Juice,Blossoms,Beans,Needles
+
+Fruits->Seeds,Juice,Peel,Fructose,Needles
+Fruits->Cores->Seeds->Cores
+Nuts->Seeds,Juice,Shell,Fat,Flour,Oil
+Blossoms->Petals,Pollen,Fruits,Nectar,Oil
+Petals,Pollen,Leaves->Dye
+Nectar->Honey->Sugar
+Grain->Flour
+Beans->Seeds,Juice
+Corn->Juice,Flour
+Seeds->Flour,Oil
+Bark->Food
+}
+
+Asteroids,Meteorites->Ores,Ice
+Comets->Ice
+
+Rain->Water,Acid,Ashes,Snow,Ice,Sand
+
+Sunny->Flora,Algae[style=bold,color=yellow];
+Moons->Oceans
+Ashes->Minerals
+
+Fauna,Soil->Insects->Food,Protein,Flora
+Insects,Pollen,Nectar->Bees->Wax,Honey,Pollen
+
+Rivers->Ores,Gravel,Clay
 Oceans,Rivers,Lakes->Water,Fish,Algae
-Places->Oceans->Salt,Stone,Gravel
-Fauna->Insects->Food,Protein,Flora
+Oceans->Salt,Stone,Gravel
+
 Players,NPCs->Fauna->Players,NPCs,Animals
 Animals->Meat,Bones,Blood,Organs,Poop
 Animals->Reptiles->Animals,Horns,Skin,Scales,Feathers,Eggs
 Animals->Birds->Animals,Skin,Feathers,Eggs
 Animals->Fish->Animals,Scales,Eggs
 Animals->Mammals->Animals,Fur,Horns,Skin,Milk
-Fertilizer,Podzol,Dirt,Sand,Stone,Gravel->Soil
-Flora,Ocean->Corals,Needles
-Flora,Stone->Moss->Dye,Water,Needles
-Flora,Soil->Flowers->Leaves,Petals,Pollen,Nectar,Seeds,Needles
-Flora,Soil,Trees_and_Bushes->Vines->Leaves,Blossoms,Needles
-Flora,Soil->Trees_and_Bushes->Leaves,Blossoms,Wood,Bark,Needles
-Flora,Soil->Ferns->Leaves,Needles
-Flora,Soil->Cacti->Dye,Water,Needles
-Flora,Soil->Grass->Seeds,Grain,Leaves,Corn,Needles
-Flora,Soil->Vegetables->Leaves,Nuts,Food,Juice,Blossoms,Beans,Needles
-Wood,Bark->Pulp->Paper
-Bark->Food
-Seeds->Food,Flour,Oil
-Blossoms->Petals,Pollen,Fruits,Nuts,Nectar
-Petals,Pollen,Leaves->Dye
-Insects,Pollen,Nectar->Bees->Wax,Honey,Pollen
-Nectar->Honey->Sugar,Food
-Algae->Dye,Food
-Fungi->Mushrooms->Spores,Food
-Grain->Flour->Dough->Bread,Pasta,Cake->Food
-Beans->Food,Seeds,Juice
-Corn->Food,Juice,Flour
-Juice->Food,Dye
-Water,Leaves->Tea->Food
-Water->Steam,Ice->Water
-Water,Ice->Food
-Milk->Food,Cheese,Yoghurt,Cream
-Milk,Cream,Cheese,Yoghurt->Fat,Dairy,Lactose
-Cream->Butter->Fat,Oil
-Sugar->Caramel->Sugar->Food
-Eggs->Protein,Food
-Blood->Food,Protein,Minerals,Dye
-Meat->Food,Protein,Minerals,Fat
-Organs->Food,Protein,Minerals,Acid
+
+Eggs->Protein
+Blood->Protein,Minerals,Dye
+Meat->Protein,Minerals,Fat
+Organs->Protein,Minerals,Acid
 Bones->Minerals
 Bones,Poop,Ashes->Fertilizer
 Skin->Leather,Yoghurt
 Fur->Pelts,Wool
-Fruits->Food,Seeds,Juice,Peel,Fructose,Needles
-Fruits->Cores->Seeds->Cores
-Nuts->Food,Seeds,Juice,Shell,Fat,Flour,Oil
-Food->Cooking,Spices->Food
-Lactose,Fructose->Sugar->Carbs
+
 Gems,Stone,Metals,Wood->Tools
-Carbs,Protein,Dairy,Fat,Salt,Water,Minerals->Nutrition
 }
