@@ -55,7 +55,8 @@ label="Food"; style=filled; color=grey;
 node [style=filled,color=lightgrey];
 Food->Nutrition->Food;
 Spices,Food->Kitchen->Food[style=bold,color=green];
-Carbs,Protein,Dairy,Fat,Salt,Water,Minerals->Nutrition[style=bold,color=red];
+Carbs,Protein,Dairy,Fat->Nutrition[style=bold,color=red];
+Salt,Water,Minerals->Nutrition[style=bold,color=red];
 
 Lactose,Fructose,Dextrose->Sugar->Carbs;
 Milk->Cheese,Yoghurt,Cream;
@@ -71,17 +72,19 @@ Water->Tea;
 subgraph cluster4 {
 label="Materials"; style=filled; color=grey;
 node [style=filled,color=lightgrey];
-Environment->Materials[ltail=cluster3,lhead=cluster4];
 
 Acid,Base;
+Leather,Pelts,Wool;
 Metals->Alloys->Metals;
-Ores->Salt,Gems,Metals,Minerals,Gas,Oil;
-Stone->Ores,Gravel,Sand;
-Dirt->Soil,Podzol,Clay,Sand;
-Fertilizer->Soil;
-Lava->Basalt->Lava->Ashes;
+Ores->Salt,Gems,Metals,Minerals;
+Sand->Glass;
+Stone->Gravel;
+Clay;
+Dirt,Poop,Fertilizer->Soil;
+Lava->Basalt->Lava->Ashes->Minerals;
 Steam->Clouds;
-Wood,Bark->Pulp->Paper;
+Wood,Bark->Pulp,Charcoal;
+Pulp->Paper;
 Butter->Oil->Lubricant;
 Oil,Gas->Fuel,Refinery;
 Refinery->Fuel,Wax,Plastic,Lubricant
@@ -92,7 +95,7 @@ label="Living"; style=filled; color=grey;
 node [style=filled,color=lightgrey];
 Environment->Living[ltail=cluster3,lhead=cluster5];
 
-Living->Flora,Fauna,Fungi,Algae
+Living->Flora,Fauna,Fungi,Algae,Players,NPCs->Living;
 Algae->Dye,Food
 }
 
@@ -133,37 +136,40 @@ Seeds->Flour,Oil
 Bark->Food
 }
 
+subgraph cluster12 {
+label="Animals"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+
+Fauna->Reptiles->Horns,Skin,Scales,Feathers,Eggs,Bones,Blood,Poop,Meat,Organs;
+Fauna->Birds->Skin,Feathers,Eggs,Bones,Blood,Poop,Meat,Organs;
+Fauna->Fish->Scales,Eggs,Bones,Blood,Poop,Meat,Organs;
+Fauna->Mammals->Fur,Horns,Skin,Milk,Bones,Blood,Poop,Meat,Organs;
+Fauna->Insects->Protein,Chitin,Blood;
+
+Insects,Pollen,Nectar->Bees->Wax,Honey,Pollen;
+Eggs->Protein;
+Blood->Protein,Minerals,Dye;
+Meat->Protein,Minerals,Fat;
+Organs->Protein,Minerals,Acid;
+Bones->Minerals;
+Bones,Poop,Ashes->Fertilizer;
+Skin->Leather,Yoghurt;
+Fur->Pelts,Wool;
+}
+
+subgraph cluster11 {
+label="Stuff"; style=filled; color=grey;
+node [style=filled,color=lightgrey];
+
+Gems,Stone,Metals,Wood,Glass->Tools;
+}
+
 Asteroids,Meteorites->Ores,Ice
 Comets->Ice
-
-Rain->Water,Acid,Ashes,Snow,Ice,Sand
-
+Rain->Water,Acid,Base,Ashes,Snow,Ice,Sand
 Sunny->Flora,Algae[style=bold,color=yellow];
 Moons->Oceans
-Ashes->Minerals
-
-Fauna,Soil->Insects->Food,Protein,Flora
-Insects,Pollen,Nectar->Bees->Wax,Honey,Pollen
-
 Rivers->Ores,Gravel,Clay
 Oceans,Rivers,Lakes->Water,Fish,Algae
 Oceans->Salt,Stone,Gravel
-
-Players,NPCs->Fauna->Players,NPCs,Animals
-Animals->Meat,Bones,Blood,Organs,Poop
-Animals->Reptiles->Animals,Horns,Skin,Scales,Feathers,Eggs
-Animals->Birds->Animals,Skin,Feathers,Eggs
-Animals->Fish->Animals,Scales,Eggs
-Animals->Mammals->Animals,Fur,Horns,Skin,Milk
-
-Eggs->Protein
-Blood->Protein,Minerals,Dye
-Meat->Protein,Minerals,Fat
-Organs->Protein,Minerals,Acid
-Bones->Minerals
-Bones,Poop,Ashes->Fertilizer
-Skin->Leather,Yoghurt
-Fur->Pelts,Wool
-
-Gems,Stone,Metals,Wood->Tools
 }
