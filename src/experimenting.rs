@@ -1,3 +1,4 @@
+/*
 use mechaenetia::state::GameState;
 use amethyst::{
 	assets::{PrefabLoaderSystem},
@@ -18,11 +19,11 @@ type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)
 pub fn start() -> amethyst::Result<()> {
 	// Always First!
 	amethyst::start_logger(amethyst::LoggerConfig::default());
-	
+
 	let app_root = application_root_dir()?;
 	let display_config_path = app_root.join("config/display.ron");
 	let assets_directory = app_root.join("assets/");
-	
+
 	let game_data = GameDataBuilder::default()
 		.with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
 		.with_bundle(TransformBundle::new())?
@@ -34,9 +35,10 @@ pub fn start() -> amethyst::Result<()> {
 				)
 				.with_plugin(RenderShaded3D::default()),
 		)?;
-	
+
 	let mut game = Application::new(assets_directory, GameState, game_data)?;
 	game.run();
-	
+
 	Ok(())
 }
+*/
