@@ -1,7 +1,7 @@
 # Blacklist everything by default
 *
 
-# And allow directories (empty directories are not included
+# And allow directories (empty directories are not included)
 !**/
 
 ### Blacklist specific things for specific reasons
@@ -47,4 +47,6 @@ Cargo.lock
 !/src/**/*.rs
 !/assets/**/*
 !/config/**/*
+# Don't include the autogenerate log4rs.yml logger configuration
+config/log4rs.yml
 !/docs/**/*
