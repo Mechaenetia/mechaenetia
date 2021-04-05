@@ -1,5 +1,5 @@
 /*
-use super::chunk::Chunk;
+use super::chunks::Chunk;
 use amethyst::{
 	prelude::*,
 	winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},

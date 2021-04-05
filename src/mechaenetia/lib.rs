@@ -1,2 +1,2 @@
-pub mod chunk;
+pub mod game_data;
 pub mod state;
