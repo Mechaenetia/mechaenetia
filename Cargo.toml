@@ -19,7 +19,7 @@ indexmap = "1.6"
 smol_str = "0.1.17"
 rayon = "1.5"
 # Game Engine dependencies
-bevy = "0.4"
+bevy = "0.5" 
 
 [features]
 
