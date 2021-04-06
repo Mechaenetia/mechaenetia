@@ -4,6 +4,7 @@ use bevy::app::AppExit;
 use bevy::ecs::schedule::ReportExecutionOrderAmbiguities;
 use bevy::prelude::*;
 use bevy::render::renderer::TextureId;
+use bevy::render::wireframe::WireframePlugin;
 use bevy::utils::HashMap;
 use mechaenetia::game_data::chunks::chunk::{Chunk, ChunkCoord};
 use mechaenetia::game_data::worlds::world::world_generator::LayeredWorldGenerator;
@@ -65,6 +66,10 @@ pub fn start() -> anyhow::Result<()> {
 
 	if false {
 		app_builder.insert_resource(ReportExecutionOrderAmbiguities);
+	}
+
+	if true {
+		app_builder.add_plugin(WireframePlugin::default());
 	}
 
 	app_builder.run();
