@@ -2,6 +2,7 @@
 
 use bevy::app::AppExit;
 use bevy::ecs::schedule::ReportExecutionOrderAmbiguities;
+use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::render::renderer::TextureId;
 use bevy::render::wireframe::WireframePlugin;
@@ -19,7 +20,10 @@ pub fn start() -> anyhow::Result<()> {
 
 	app_builder
 		// DefaultPlugins sets up the standard renderer, winit, logger, some basic components, etc... depending on features enabled
-		.add_plugins(DefaultPlugins)
+		.add_plugins_with(
+			DefaultPlugins,
+			|group| group.disable::<LogPlugin>(), // We have a more configurable logger, log4rs, so don't use EnvFilter
+		)
 		.add_state(GameState::Loading)
 		// .insert_resource(State::new(GameStageState::InitialLoading))
 		// .add_stage_after(

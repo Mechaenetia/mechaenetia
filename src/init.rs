@@ -1,9 +1,9 @@
 use anyhow::Context;
-use std::path::PathBuf;
 use log::LevelFilter;
 use log4rs::append::console::{ConsoleAppender, Target};
 use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
+use std::path::PathBuf;
 
 const DEFAULT_LOGGING_DEFINITION: &'static str = r#"
 refresh_rate: 30 seconds
@@ -32,8 +32,9 @@ pub fn init_logging(config_dir: &Option<PathBuf>) -> anyhow::Result<()> {
 				let mut path = path.clone();
 				path.push("log4rs.yml");
 				if !path.is_file() {
-					std::fs::write(&path, DEFAULT_LOGGING_DEFINITION)
-						.with_context(|| format!("Failed to write default `log4rs.yml` file at: {:?}", path))?;
+					std::fs::write(&path, DEFAULT_LOGGING_DEFINITION).with_context(|| {
+						format!("Failed to write default `log4rs.yml` file at: {:?}", path)
+					})?;
 				}
 				path
 			};

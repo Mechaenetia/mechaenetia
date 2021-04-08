@@ -7,7 +7,8 @@ edition = "2018"
 [dependencies]
 # Base system dependencies
 log = "0.4"
-log4rs = {version = "0.9", features = ["all_components", "gzip", "file", "yaml_format"]}
+log4rs = {version = "1.0", features = ["toml_format"]}
+tracing = {version = "0.1", features = ["attributes", "log", "log-always"]}
 structopt = "0.3"
 serde_derive = "1.0"
 serde = {version = "1.0", features=["derive"]}
