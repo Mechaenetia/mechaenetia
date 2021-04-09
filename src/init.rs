@@ -5,18 +5,39 @@ use log4rs::config::{Appender, Config, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::path::PathBuf;
 
-const DEFAULT_LOGGING_DEFINITION: &'static str = r#"
-refresh_rate: 30 seconds
+const DEFAULT_LOGGING_DEFINITION: &'static str = r#"refresh_rate: 30 seconds
+
 appenders:
   stdout:
     kind: console
     encoder:
+      kind: pattern
       pattern: "{d} [{t}:{I}:{T}] {h({l})} {M}: {m}{n}"
 
 root:
   level: trace
   appenders:
     - stdout
+
+loggers:
+  tracing::span:
+    level: warn
+  gpu_alloc:
+    level: warn
+  gfx_backend_vulkan:
+    level: warn
+  wgpu_core:
+    level: warn
+  bevy_app::event:
+    level: info
+  mio::poll:
+    level: info
+  bevy_app::plugin_group:
+    level: warn
+  bevy_app::app_builder:
+    level: warn
+  bevy_winit:
+    level: info
 "#;
 
 /// Initializes the logging system, panics on failure
