@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Client Dynamic Load (no-debug)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --features bevy/dynamic --bin client -- --config-dir ./config" />
+  <configuration default="false" name="Universal" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="command" value="run -- --config-dir ./config" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

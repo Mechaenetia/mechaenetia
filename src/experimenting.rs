@@ -14,8 +14,8 @@ use std::sync::{Arc, RwLock};
 
 // Switch to #[bevy_main] if this is what's chosen as the main target
 pub fn start() -> anyhow::Result<()> {
-	// CoreStage::Startup is for system startup, not for loading textures or so, unless you want it all to happen before rendering, like progress bars
-	// CoreStage::Update is for the standard update loop, there's also a Pre and  Post version
+	// GameState::Startup is for system startup, not for loading textures or so, unless you want it all to happen before rendering, like progress bars
+	// GameState::Update is for the standard update loop, there's also a Pre and  Post version
 	let mut app_builder = App::build();
 
 	app_builder
@@ -24,30 +24,9 @@ pub fn start() -> anyhow::Result<()> {
 			DefaultPlugins,
 			|group| group.disable::<LogPlugin>(), // We have a more configurable logger, log4rs, so don't use EnvFilter
 		)
+		.add_startup_system(testing_blah.system())
+		.add_system(testing_query.system())
 		.add_state(GameState::Loading)
-		// .insert_resource(State::new(GameStageState::InitialLoading))
-		// .add_stage_after(
-		// 	CoreStage::Update,
-		// 	GameStage,
-		// 	Stage::<GameStageState>::default(),
-		// )
-		// .on_state_enter(
-		// 	GameStage,
-		// 	GameStageState::InitialLoading,
-		// 	load_textures.system(),
-		// )
-		// .on_state_update(
-		// 	GameStage,
-		// 	GameStageState::InitialLoading,
-		// 	check_textures.system(),
-		// )
-		// .on_state_enter(GameStage, GameStageState::MainMenu, load_main_menu.system())
-		// .on_state_leave(
-		// 	GameStage,
-		// 	GameStageState::MainMenu,
-		// 	unload_main_menu.system(),
-		// )
-		//.add_resource(Arc::new(RwLock::new(Worlds::default())))
 		.add_system_set(SystemSet::on_enter(GameState::Loading).with_system(load_loading.system()))
 		.add_system_set(
 			SystemSet::on_update(GameState::Loading).with_system(update_loading.system()),
@@ -79,6 +58,27 @@ pub fn start() -> anyhow::Result<()> {
 	app_builder.run();
 
 	Ok(())
+}
+
+fn testing_blah(mut cmds: Commands) {
+	cmds.spawn().insert(42usize);
+	cmds.spawn().insert(21usize).insert(true);
+	cmds.spawn().insert(18usize).insert(false).insert(());
+	warn!("Made entities");
+}
+
+fn testing_query(
+	mut query: Query<(&usize, Option<&bool>), (With<()>,)>,
+	mut exit: EventWriter<AppExit>,
+) {
+	let mut do_exit = false;
+	for (the_int, maybe_bool) in query.iter() {
+		do_exit = true;
+		warn!("Found things: {}, {:?}", the_int, maybe_bool);
+	}
+	if do_exit {
+		exit.send(AppExit);
+	}
 }
 
 // #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
