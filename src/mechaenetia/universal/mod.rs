@@ -5,5 +5,12 @@ use bevy::prelude::*;
 pub struct UniversalPlugin;
 
 impl PluginGroup for UniversalPlugin {
-	fn build(&mut self, group: &mut PluginGroupBuilder) {}
+	fn build(&mut self, group: &mut PluginGroupBuilder) {
+		group.add(UniversalPlugin);
+	}
+}
+
+impl Plugin for UniversalPlugin {
+	fn build(&self, app: &mut AppBuilder) {
+	}
 }

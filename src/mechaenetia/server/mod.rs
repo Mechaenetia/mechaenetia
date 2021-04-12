@@ -5,5 +5,21 @@ use bevy::prelude::*;
 pub struct ServerPlugin;
 
 impl PluginGroup for ServerPlugin {
-	fn build(&mut self, group: &mut PluginGroupBuilder) {}
+	fn build(&mut self, group: &mut PluginGroupBuilder) {
+		group.add(ServerPlugin);
+	}
+}
+
+impl Plugin for ServerPlugin {
+	fn build(&self, app: &mut AppBuilder) {
+		app.add_state(ServerState::NotRunning);
+	}
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum ServerState {
+	NotRunning,
+	Loading,
+	Running,
+	Paused,
 }
