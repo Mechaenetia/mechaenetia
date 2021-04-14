@@ -11,6 +11,5 @@ impl PluginGroup for UniversalPlugin {
 }
 
 impl Plugin for UniversalPlugin {
-	fn build(&self, app: &mut AppBuilder) {
-	}
+	fn build(&self, _app: &mut AppBuilder) {}
 }
