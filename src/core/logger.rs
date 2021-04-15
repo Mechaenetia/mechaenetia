@@ -28,9 +28,15 @@ loggers:
     level: warn
   wgpu_core:
     level: warn
+  gpu_descriptor:
+    level: info
+  bevy_wgpu:
+    level: info
   bevy_app::event:
     level: info
   mio::poll:
+    level: info
+  naga:
     level: info
   bevy_app::plugin_group:
     level: warn

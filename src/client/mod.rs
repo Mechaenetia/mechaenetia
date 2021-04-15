@@ -27,7 +27,8 @@ impl PluginGroup for ClientPlugin {
 
 impl Plugin for ClientPlugin {
 	fn build(&self, app: &mut AppBuilder) {
-		app.add_startup_system(startup.system())
+		app.insert_resource(ClearColor(Color::rgb(0.0, 0.25, 0.0)))
+			.add_startup_system(startup.system())
 			.add_system(exit_on_window_close.system());
 	}
 }
@@ -39,12 +40,15 @@ fn exit_on_window_close(
 	// We only support a single window currently, change this if that changes
 	if let Some(window_closed) = windows_closed.iter().next() {
 		trace!("Window closed `{:?}`: exiting", window_closed.id);
-		state.overwrite_replace(states::ClientState::Exiting).expect("failed transitioning to the exit state");
+		state
+			.overwrite_replace(states::ClientState::Exiting)
+			.expect("failed transitioning to the exit state");
 	}
 }
 
-fn startup(mut commands: Commands) {
+fn startup() {
 	trace!("Client startup");
-	// This spawns the camera that renders the 2D UI over the whole screen
-	commands.spawn_bundle(UiCameraBundle::default());
+	// This spawns the camera that renders the 2D Bevy UI over the whole screen, not using bevy's UI
+	// currently, so its disabled for now...
+	// commands.spawn_bundle(UiCameraBundle::default());
 }

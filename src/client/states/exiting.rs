@@ -8,16 +8,16 @@ pub fn register_systems(app: &mut AppBuilder) {
 		.add_system_set(SystemSet::on_exit(state.clone()).with_system(on_exit.system()));
 }
 
-pub fn on_enter() {
+fn on_enter() {
 	trace!("Exiting State: Enter");
 }
 
-pub fn on_update(mut exit: EventWriter<AppExit>) {
+fn on_update(mut exit: EventWriter<AppExit>) {
 	trace!("Exiting State: Update");
 	// Exit after all cleanup is done
 	exit.send(AppExit)
 }
 
-pub fn on_exit() {
+fn on_exit() {
 	trace!("Exiting State: Exit");
 }
