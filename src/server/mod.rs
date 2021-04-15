@@ -6,7 +6,9 @@ pub struct ServerPlugin;
 
 impl PluginGroup for ServerPlugin {
 	fn build(&mut self, group: &mut PluginGroupBuilder) {
-		group.add(ServerPlugin);
+		group
+			.add(bevy::app::ScheduleRunnerPlugin::default())
+			.add(ServerPlugin);
 	}
 }
 
@@ -19,7 +21,7 @@ impl Plugin for ServerPlugin {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum ServerState {
 	NotRunning,
-	Loading,
-	Running,
-	Paused,
+	// Loading,
+	// Running,
+	// Paused,
 }

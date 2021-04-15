@@ -19,9 +19,11 @@ indexmap = "1.6"
 smol_str = "0.1.17"
 rayon = "1.5"
 # Game Engine dependencies
-bevy = "0.5" 
+bevy = { version = "0.5", default_features = false, features = ["trace", "bevy_dynamic_plugin", "bevy_gltf"] }
 
 [features]
+default = ["wgpu"]
+wgpu = ["bevy/bevy_audio", "bevy/bevy_gilrs", "bevy/bevy_wgpu", "bevy/bevy_winit", "bevy/render", "bevy/png", "bevy/hdr", "bevy/mp3", "bevy/x11"]
 
 [lib]
 name = "mechaenetia"

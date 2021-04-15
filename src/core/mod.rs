@@ -1,11 +1,10 @@
 /// The `crates::core` module is for the code that is used to set up everything else, but then is
 /// not touched by anything else.  The code here is minimal.
-use bevy::log::LogPlugin;
 use bevy::prelude::*;
+use std::convert::Infallible;
+use std::fmt::Debug;
 use std::path::PathBuf;
 use tracing::log::LevelFilter;
-use std::fmt::Debug;
-use std::convert::Infallible;
 
 mod logger;
 
@@ -23,7 +22,7 @@ pub enum EngineError<CustErr: 'static + std::error::Error> {
 ///
 /// ```no_run
 /// crate::prelude::Engine::new()
-/// 	...
+///     // Set options here
 /// 	.run()
 /// ```
 #[derive(Debug)]
@@ -47,12 +46,16 @@ impl Engine {
 			game_configuration_path: None,
 		}
 	}
-	
+
 	pub fn run(&self) -> Result<(), EngineError<Infallible>> {
 		self.custom_run(|mut app| Ok(app.run()))
 	}
 
-	pub fn custom_run<Out, Err: 'static + std::error::Error, Runner: FnOnce(AppBuilder) -> Result<Out, Err>>(
+	pub fn custom_run<
+		Out,
+		Err: 'static + std::error::Error,
+		Runner: FnOnce(AppBuilder) -> Result<Out, Err>,
+	>(
 		&self,
 		runner: Runner,
 	) -> Result<Out, EngineError<Err>> {
@@ -61,26 +64,13 @@ impl Engine {
 
 		app_builder.add_plugins(crate::universal::UniversalPlugin::default());
 
-		if self.include_client {
-			app_builder
-				.add_plugins_with(
-					DefaultPlugins,
-					|group| group.disable::<LogPlugin>(), // We have a more configurable logger, log4rs, so don't use EnvFilter
-				)
-				.add_plugins(crate::client::ClientPlugin::default());
-		} else {
-			app_builder
-				.add_plugins(MinimalPlugins)
-				.add_plugin(bevy::transform::TransformPlugin::default())
-				.add_plugin(bevy::diagnostic::DiagnosticsPlugin::default())
-				.add_plugin(bevy::input::InputPlugin::default())
-				.add_plugin(bevy::window::WindowPlugin::default())
-				.add_plugin(bevy::asset::AssetPlugin::default())
-				.add_plugin(bevy::scene::ScenePlugin::default());
-		}
-
+		// Make sure server is added before clients so its runner won't override the client runner
 		if self.include_server {
 			app_builder.add_plugins(crate::server::ServerPlugin::default());
+		}
+
+		if self.include_client {
+			app_builder.add_plugins(crate::client::ClientPlugin::default());
 		}
 
 		runner(app_builder).map_err(|e| EngineError::CustomRunnerError(e))

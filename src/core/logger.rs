@@ -38,6 +38,8 @@ loggers:
     level: warn
   bevy_winit:
     level: info
+  bevy_ecs::schedule:
+    level: warn
 "#;
 
 #[derive(thiserror::Error, Debug)]

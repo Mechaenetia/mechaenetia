@@ -6,7 +6,15 @@ pub struct UniversalPlugin;
 
 impl PluginGroup for UniversalPlugin {
 	fn build(&mut self, group: &mut PluginGroupBuilder) {
-		group.add(UniversalPlugin);
+		group
+			.add(bevy::core::CorePlugin::default())
+			.add(bevy::transform::TransformPlugin::default())
+			.add(bevy::diagnostic::DiagnosticsPlugin::default())
+			.add(bevy::input::InputPlugin::default())
+			.add(bevy::window::WindowPlugin::default())
+			.add(bevy::asset::AssetPlugin::default())
+			.add(bevy::scene::ScenePlugin::default())
+			.add(UniversalPlugin);
 	}
 }
 

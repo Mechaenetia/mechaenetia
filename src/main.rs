@@ -3,7 +3,6 @@ use mechaenetia::prelude::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use tracing::log::LevelFilter;
-use tracing::*;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Mechaenetia", about = "Mechaenetia Game")]
