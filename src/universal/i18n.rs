@@ -166,7 +166,7 @@ impl I18N {
 		}
 
 		error!("I18N Message ID value not found: {}", id);
-		Cow::Borrowed(id)
+		Cow::Owned(format!("##~{}~##", id))
 	}
 
 	pub fn get_with_args<'i, 's: 'i>(&'s self, id: &'i str, args: &'i FluentArgs) -> Cow<'i, str> {
@@ -179,7 +179,7 @@ impl I18N {
 		}
 
 		error!("I18N Message ID value not found: {}", id);
-		Cow::Borrowed(id)
+		Cow::Owned(format!("##~{}~##", id))
 	}
 
 	pub fn get_with_args_list<'i, 's: 'i, K, V, I>(&'s self, id: &'i str, args: I) -> Cow<'i, str>
@@ -200,7 +200,7 @@ impl I18N {
 		}
 
 		error!("I18N Message ID value not found: {}", id);
-		Cow::Borrowed(id)
+		Cow::Owned(format!("##~{}~##", id))
 	}
 }
 
