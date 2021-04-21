@@ -2,3 +2,5 @@ title = Mechaenetia
 quit = Quit
 settings-title = Settings
 settings-cancel = Cancel
+settings_current_language = Current Language:
+settings_choose_language = Choose Language (takes immediate effect): 

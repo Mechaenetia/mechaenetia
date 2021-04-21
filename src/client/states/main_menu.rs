@@ -1,4 +1,6 @@
-use crate::universal::i18n::I18NUpdateEvent;
+use crate::universal::i18n::{
+	scan_languages_on_fs, I18NChangeLanguageTo, I18NLanguageChangedEvent,
+};
 use crate::universal::I18N;
 use bevy::prelude::*;
 use bevy_egui::egui::Ui;
@@ -27,7 +29,7 @@ fn update_egui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Re
 fn update_language(
 	mut main_menu_state: ResMut<Option<MainMenuState>>,
 	lang: Res<I18N>,
-	mut event: EventReader<I18NUpdateEvent>,
+	mut event: EventReader<I18NLanguageChangedEvent>,
 ) {
 	if event.iter().next().is_some() {
 		if let Some(menu) = &mut *main_menu_state {
@@ -50,10 +52,14 @@ impl Default for MainMenuScreen {
 
 #[derive(Default)]
 struct MainMenuState {
+	cur_lang: String,
+	possible_languages: Vec<String>,
 	l_title: String,
 	l_quit: String,
 	l_settings_title: String,
 	l_settings_cancel: String,
+	l_settings_current_language: String,
+	l_settings_choose_language: String,
 	screen: MainMenuScreen,
 }
 
@@ -66,10 +72,19 @@ impl MainMenuState {
 	}
 
 	fn update_language(&mut self, lang: &I18N) {
+		self.cur_lang = lang.get_current_language().to_string();
+		self.possible_languages = scan_languages_on_fs()
+			.unwrap_or(vec![])
+			.iter()
+			.map(|l| l.to_string())
+			.collect();
+		self.possible_languages.sort();
 		self.l_title = lang.get("title").into_owned();
 		self.l_quit = lang.get("quit").into_owned();
 		self.l_settings_title = lang.get("settings-title").into_owned();
 		self.l_settings_cancel = lang.get("settings-cancel").into_owned();
+		self.l_settings_current_language = lang.get("settings_current_language").into_owned();
+		self.l_settings_choose_language = lang.get("settings_choose_language").into_owned();
 	}
 
 	fn render(
@@ -77,6 +92,7 @@ impl MainMenuState {
 		e: &mut EguiContext,
 		state: &mut ResMut<State<super::ClientState>>,
 		_windows: &Windows,
+		change_lang: &mut EventWriter<I18NChangeLanguageTo>,
 	) {
 		egui::TopPanel::top("top_title").show(e.ctx(), |ui| {
 			ui.centered_and_justified(|ui| {
@@ -89,13 +105,13 @@ impl MainMenuState {
 		egui::CentralPanel::default().show(e.ctx(), |ui| {
 			match self.screen {
 				MainMenuScreen::Empty => (),
-				MainMenuScreen::Settings => self.render_settings(state, ui),
+				MainMenuScreen::Settings => self.render_settings(state, ui, change_lang),
 			};
 		});
 	}
 
 	fn render_main_menu(&mut self, state: &mut ResMut<State<super::ClientState>>, ui: &mut Ui) {
-		ui.vertical(|ui| {
+		ui.vertical_centered_justified(|ui| {
 			let settings_but = egui::Button::new(&self.l_settings_title)
 				.enabled(self.screen != MainMenuScreen::Settings);
 			if ui.add(settings_but).clicked() {
@@ -109,7 +125,12 @@ impl MainMenuState {
 		});
 	}
 
-	fn render_settings(&mut self, _state: &mut ResMut<State<super::ClientState>>, ui: &mut Ui) {
+	fn render_settings(
+		&mut self,
+		_state: &mut ResMut<State<super::ClientState>>,
+		ui: &mut Ui,
+		change_lang: &mut EventWriter<I18NChangeLanguageTo>,
+	) {
 		ui.centered_and_justified(|ui| {
 			let mut frame = egui::Frame::none()
 				.fill(egui::Color32::from_rgb(32, 0, 0))
@@ -118,6 +139,21 @@ impl MainMenuState {
 			frame.show(ui, |ui| {
 				ui.vertical(|ui| {
 					ui.heading(&self.l_settings_title);
+					ui.separator();
+					ui.horizontal(|ui| {
+						ui.heading(&self.l_settings_current_language);
+						ui.label(&self.cur_lang);
+					});
+					ui.heading(&self.l_settings_choose_language);
+					ui.horizontal_wrapped(|ui| {
+						for lang in &self.possible_languages {
+							if ui.radio(lang == &self.cur_lang, lang).clicked() {
+								change_lang.send(I18NChangeLanguageTo(lang.parse().expect(
+									"This was already confirmed valid, so why did this fail?",
+								)));
+							}
+						}
+					});
 					ui.separator();
 					if ui.button(&self.l_settings_cancel).clicked() {
 						self.screen = MainMenuScreen::Empty;
@@ -147,10 +183,11 @@ fn on_update(
 	mut main_menu_state: ResMut<Option<MainMenuState>>,
 	mut state: ResMut<State<super::ClientState>>,
 	windows: Res<Windows>,
+	mut change_lang: EventWriter<I18NChangeLanguageTo>,
 ) {
 	// trace!("MainMenu State: Update");
 	if let Some(m) = &mut *main_menu_state {
-		m.render(&mut *egui_ctx, &mut state, &*windows);
+		m.render(&mut *egui_ctx, &mut state, &*windows, &mut change_lang);
 	}
 }
 

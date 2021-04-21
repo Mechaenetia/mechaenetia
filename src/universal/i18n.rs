@@ -4,14 +4,15 @@ use fluent_syntax::ast::Pattern;
 use std::borrow::Cow;
 use std::ffi::OsStr;
 use std::path::PathBuf;
-use unic_langid::LanguageIdentifier;
+use unic_langid::{LanguageIdentifier, LanguageIdentifierError};
 
 type Bundle = FluentBundle<FluentResource, intl_memoizer::concurrent::IntlLangMemoizer>;
 pub struct I18N {
 	bundles: Vec<Bundle>,
 }
 
-pub struct I18NUpdateEvent;
+pub struct I18NLanguageChangedEvent;
+pub struct I18NChangeLanguageTo(pub LanguageIdentifier);
 
 // #[derive(thiserror::Error, Debug)]
 // pub enum I18NError {
@@ -29,6 +30,20 @@ impl I18N {
 		};
 		this.add_language_from_path(language, path)?;
 		Ok(this)
+	}
+
+	pub fn swap_to_language(
+		&mut self,
+		language: LanguageIdentifier,
+		path: impl Into<PathBuf>,
+	) -> Result<&mut Self, std::io::Error> {
+		let old_language = self.get_current_language();
+		info!("Changing language from {} to {}", old_language, language);
+		if self.bundles.len() > 1 {
+			self.bundles.swap_remove(0);
+			self.bundles.resize_with(1, || unreachable!());
+		}
+		self.add_language_from_path(language, path)
 	}
 
 	pub fn add_language_from_path(
@@ -76,7 +91,7 @@ impl I18N {
 		}
 	}
 
-	pub fn add_language_resources_from_path(
+	fn add_language_resources_from_path(
 		bundle: &mut Bundle,
 		id: &str,
 		path: impl Into<PathBuf>,
@@ -192,6 +207,8 @@ impl I18N {
 			if let Some(msg) = bundle.get_message(id) {
 				if let Some(value) = msg.value() {
 					let args: FluentArgs<'i> = args.into_iter().collect();
+					// We can't point to things in the stackframe (since it's about to pop), so have
+					// to make this owned.
 					return Cow::Owned(
 						Self::format_string(&bundle, id, value, Some(&args)).into_owned(),
 					);
@@ -201,6 +218,15 @@ impl I18N {
 
 		error!("I18N Message ID value not found: {}", id);
 		Cow::Owned(format!("##~{}~##", id))
+	}
+
+	pub fn get_current_language(&self) -> &LanguageIdentifier {
+		self.bundles
+			.first()
+			.expect("Should always have at least one language bundle, have none")
+			.locales
+			.first()
+			.expect("Locale should always be defined for language bundles")
 	}
 }
 
@@ -220,7 +246,7 @@ impl Plugin for I18NPlugin {
 			"en-US"
 				.parse()
 				.expect("Failed to parse `en-US` as a language"),
-			"./lang/en-US",
+			"./assets/lang/en-US",
 		)
 		.expect("Failed to construct I18N resource for language: ");
 
@@ -229,6 +255,56 @@ impl Plugin for I18NPlugin {
 		lang.add_language_from_path(self.language.clone(), language_path)
 			.expect("Failed to load I18N language");
 
-		app.add_event::<I18NUpdateEvent>().insert_resource(lang);
+		app.add_event::<I18NLanguageChangedEvent>()
+			.add_event::<I18NChangeLanguageTo>()
+			.insert_resource(lang)
+			.add_system(change_language.system());
 	}
+}
+
+fn change_language(
+	mut change: EventReader<I18NChangeLanguageTo>,
+	mut lang: ResMut<I18N>,
+	mut notify: EventWriter<I18NLanguageChangedEvent>,
+) {
+	let old_language = lang.get_current_language();
+	if let Some(I18NChangeLanguageTo(language)) = change
+		.iter()
+		.filter(|I18NChangeLanguageTo(language)| language != old_language)
+		.last()
+	{
+		let mut path: PathBuf = "./assets/lang".into();
+		path.push(language.to_string());
+		if path.exists() {
+			lang.swap_to_language(language.clone(), path)
+				.expect("Failed to swap to new language");
+			notify.send(I18NLanguageChangedEvent);
+		} else {
+			warn!(
+				"Requested to change to a language that does not exist: {}",
+				language
+			);
+		}
+	}
+}
+
+pub fn scan_languages_on_fs() -> Result<Vec<LanguageIdentifier>, std::io::Error> {
+	let mut ret = Vec::with_capacity(10);
+	for path in std::fs::read_dir("./assets/lang")?.flatten() {
+		if let Ok(file_type) = path.file_type() {
+			if file_type.is_dir() {
+				if let Ok(lang) = path
+					.path()
+					.iter()
+					.last()
+					.and_then(|l| l.to_str())
+					.ok_or(LanguageIdentifierError::Unknown)
+					.and_then(|l| l.parse::<LanguageIdentifier>())
+				{
+					ret.push(lang);
+				}
+			}
+		}
+	}
+	Ok(ret)
 }
