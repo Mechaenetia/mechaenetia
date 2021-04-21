@@ -15,7 +15,12 @@ fn on_enter() {
 fn on_update(mut exit: EventWriter<AppExit>) {
 	trace!("Exiting State: Update");
 	// Exit after all cleanup is done
-	exit.send(AppExit)
+	exit.send(AppExit);
+	std::thread::spawn(|| {
+		// Hard exit after a second in case the GPU driver doesn't let go
+		std::thread::sleep(std::time::Duration::from_millis(1000));
+		std::process::exit(0);
+	});
 }
 
 fn on_exit() {

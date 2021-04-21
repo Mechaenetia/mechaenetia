@@ -3,6 +3,7 @@ use mechaenetia::prelude::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
 use tracing::log::LevelFilter;
+use unic_langid::LanguageIdentifier;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Mechaenetia", about = "Mechaenetia Game")]
@@ -27,6 +28,10 @@ pub struct CLIOpts {
 	/// as to allow it to be filled out manually before actually loading it.
 	#[structopt(long)]
 	load_game: Option<PathBuf>,
+
+	/// Override the in-game language via the specified language code
+	#[structopt(long)]
+	language: Option<LanguageIdentifier>,
 }
 
 fn main() -> anyhow::Result<()> {
