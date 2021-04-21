@@ -21,9 +21,6 @@ pub enum EngineError<CustErr: 'static + std::error::Error> {
 /// bevy backend when `Engine::run` is run.  Standard builder so call it as you normally would.
 ///
 /// ```no_run
-/// crate::prelude::Engine::new()
-///     // Set options here
-/// 	.run()
 /// ```
 #[derive(Debug)]
 pub struct Engine {
