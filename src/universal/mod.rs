@@ -1,4 +1,5 @@
 pub mod i18n;
+pub mod local_server;
 
 pub use i18n::I18N;
 
@@ -39,6 +40,7 @@ impl PluginGroup for UniversalPlugin {
 			.add(bevy::window::WindowPlugin::default())
 			.add(bevy::asset::AssetPlugin::default())
 			.add(bevy::scene::ScenePlugin::default())
-			.add(i18n::I18NPlugin::new(self.language.clone()));
+			.add(i18n::I18NPlugin::new(self.language.clone()))
+			.add(local_server::LocalServerPlugin::default());
 	}
 }

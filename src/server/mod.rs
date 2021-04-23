@@ -1,3 +1,4 @@
+use crate::universal::local_server::LocalServerExists;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 
@@ -14,7 +15,8 @@ impl PluginGroup for ServerPlugin {
 
 impl Plugin for ServerPlugin {
 	fn build(&self, app: &mut AppBuilder) {
-		app.add_state(ServerState::NotRunning);
+		app.add_state(ServerState::NotRunning)
+			.insert_resource(LocalServerExists);
 	}
 }
 

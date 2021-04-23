@@ -220,6 +220,74 @@ impl I18N {
 		Cow::Owned(format!("##~{}~##", id))
 	}
 
+	pub fn get_attr<'i, 's: 'i>(&'s self, id: &'i str, attr: &'i str) -> Cow<'i, str> {
+		for bundle in self.bundles.iter() {
+			if let Some(msg) = bundle.get_message(id) {
+				if let Some(value) = msg.get_attribute(attr) {
+					return Self::format_string(&bundle, id, value.value(), None);
+				}
+			}
+		}
+
+		error!(
+			"I18N Message ID and attr values not found: {:?} {:?}",
+			id, attr
+		);
+		Cow::Owned(format!("##~{}~@@~{}~##", id, attr))
+	}
+
+	pub fn get_attr_with_args<'i, 's: 'i>(
+		&'s self,
+		id: &'i str,
+		attr: &'i str,
+		args: &'i FluentArgs,
+	) -> Cow<'i, str> {
+		for bundle in self.bundles.iter() {
+			if let Some(msg) = bundle.get_message(id) {
+				if let Some(value) = msg.get_attribute(attr) {
+					return Self::format_string(&bundle, id, value.value(), Some(args));
+				}
+			}
+		}
+
+		error!(
+			"I18N Message ID and attr values not found: {:?} {:?}",
+			id, attr
+		);
+		Cow::Owned(format!("##~{}~@@~{}~##", id, attr))
+	}
+
+	pub fn get_attr_with_args_list<'i, 's: 'i, K, V, I>(
+		&'s self,
+		id: &'i str,
+		attr: &'i str,
+		args: I,
+	) -> Cow<'i, str>
+	where
+		K: Into<Cow<'i, str>>,
+		V: Into<FluentValue<'i>>,
+		I: IntoIterator<Item = (K, V)>,
+	{
+		for bundle in self.bundles.iter() {
+			if let Some(msg) = bundle.get_message(id) {
+				if let Some(value) = msg.get_attribute(attr) {
+					let args: FluentArgs<'i> = args.into_iter().collect();
+					// We can't point to things in the stackframe (since it's about to pop), so have
+					// to make this owned.
+					return Cow::Owned(
+						Self::format_string(&bundle, id, value.value(), Some(&args)).into_owned(),
+					);
+				}
+			}
+		}
+
+		error!(
+			"I18N Message ID and attr values not found: {:?} {:?}",
+			id, attr
+		);
+		Cow::Owned(format!("##~{}~@@~{}~##", id, attr))
+	}
+
 	pub fn get_current_language(&self) -> &LanguageIdentifier {
 		self.bundles
 			.first()

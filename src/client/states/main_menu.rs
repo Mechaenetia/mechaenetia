@@ -1,6 +1,7 @@
 use crate::universal::i18n::{
 	scan_languages_on_fs, I18NChangeLanguageTo, I18NLanguageChangedEvent,
 };
+use crate::universal::local_server::{CreateServer, LocalServerEvent};
 use crate::universal::I18N;
 use bevy::prelude::*;
 use bevy_egui::egui::Ui;
@@ -41,6 +42,8 @@ fn update_language(
 #[derive(PartialEq, Eq)]
 enum MainMenuScreen {
 	Empty,
+	LocalServer,
+	JoinServer,
 	Settings,
 }
 
@@ -56,6 +59,9 @@ struct MainMenuState {
 	possible_languages: Vec<String>,
 	l_title: String,
 	l_quit: String,
+	l_server_local: String,
+	l_server_local_test: String,
+	l_server_join: String,
 	l_settings_title: String,
 	l_settings_cancel: String,
 	l_settings_current_language: String,
@@ -81,6 +87,9 @@ impl MainMenuState {
 		self.possible_languages.sort();
 		self.l_title = lang.get("title").into_owned();
 		self.l_quit = lang.get("quit").into_owned();
+		self.l_server_local = lang.get("menu-server-local").into_owned();
+		self.l_server_local_test = lang.get_attr("menu-server-local", "test").into_owned();
+		self.l_server_join = lang.get("menu-server-join").into_owned();
 		self.l_settings_title = lang.get("settings-title").into_owned();
 		self.l_settings_cancel = lang.get("settings-cancel").into_owned();
 		self.l_settings_current_language = lang.get("settings_current_language").into_owned();
@@ -93,6 +102,7 @@ impl MainMenuState {
 		state: &mut ResMut<State<super::ClientState>>,
 		_windows: &Windows,
 		change_lang: &mut EventWriter<I18NChangeLanguageTo>,
+		local_server: &mut LocalServerEvent<CreateServer>,
 	) {
 		egui::TopPanel::top("top_title").show(e.ctx(), |ui| {
 			ui.centered_and_justified(|ui| {
@@ -100,23 +110,56 @@ impl MainMenuState {
 			});
 		});
 		egui::SidePanel::left("news_panel", 150.0).show(e.ctx(), |ui| {
-			self.render_main_menu(state, ui);
+			self.render_main_menu(ui, state, local_server);
 		});
 		egui::CentralPanel::default().show(e.ctx(), |ui| {
 			match self.screen {
 				MainMenuScreen::Empty => (),
-				MainMenuScreen::Settings => self.render_settings(state, ui, change_lang),
+				MainMenuScreen::LocalServer => self.render_server_local(ui, state, local_server),
+				MainMenuScreen::JoinServer => self.render_server_join(ui, state),
+				MainMenuScreen::Settings => self.render_settings(ui, state, change_lang),
 			};
 		});
 	}
 
-	fn render_main_menu(&mut self, state: &mut ResMut<State<super::ClientState>>, ui: &mut Ui) {
+	fn render_main_menu(
+		&mut self,
+		ui: &mut Ui,
+		state: &mut ResMut<State<super::ClientState>>,
+		local_server: &mut LocalServerEvent<CreateServer>,
+	) {
 		ui.vertical_centered_justified(|ui| {
-			let settings_but = egui::Button::new(&self.l_settings_title)
-				.enabled(self.screen != MainMenuScreen::Settings);
-			if ui.add(settings_but).clicked() {
-				self.screen = MainMenuScreen::Settings;
+			let menu_btn =
+				|ui: &mut Ui, screen: &mut MainMenuScreen, state: MainMenuScreen, text: &str| {
+					if ui
+						.add(egui::Button::new(text).enabled(*screen != state))
+						.clicked()
+					{
+						*screen = state
+					}
+				};
+
+			if local_server.exists() {
+				menu_btn(
+					ui,
+					&mut self.screen,
+					MainMenuScreen::LocalServer,
+					&self.l_server_local,
+				);
 			}
+			menu_btn(
+				ui,
+				&mut self.screen,
+				MainMenuScreen::JoinServer,
+				&self.l_server_join,
+			);
+			menu_btn(
+				ui,
+				&mut self.screen,
+				MainMenuScreen::Settings,
+				&self.l_settings_title,
+			);
+
 			if ui.button(&self.l_quit).clicked() {
 				state.overwrite_replace(super::ClientState::Exiting).expect(
 					"failed transitioning to exiting state by clicking exit main menu button",
@@ -125,10 +168,34 @@ impl MainMenuState {
 		});
 	}
 
+	fn render_server_local(
+		&mut self,
+		ui: &mut Ui,
+		state: &mut ResMut<State<super::ClientState>>,
+		local_server: &mut LocalServerEvent<CreateServer>,
+	) {
+		ui.centered_and_justified(|ui| {
+			ui.vertical(|ui| {
+				if let Some(create_server) = local_server.event() {
+					if ui.button(&self.l_server_local_test).clicked() {
+						create_server.send(CreateServer::new("A New Server".to_owned()));
+						state
+							.push(super::ClientState::JoinGame)
+							.expect("Unable to switch to JoinGame state");
+					}
+				}
+			});
+		});
+	}
+
+	fn render_server_join(&mut self, ui: &mut Ui, _state: &mut ResMut<State<super::ClientState>>) {
+		ui.label("todo");
+	}
+
 	fn render_settings(
 		&mut self,
-		_state: &mut ResMut<State<super::ClientState>>,
 		ui: &mut Ui,
+		_state: &mut ResMut<State<super::ClientState>>,
 		change_lang: &mut EventWriter<I18NChangeLanguageTo>,
 	) {
 		ui.centered_and_justified(|ui| {
@@ -184,10 +251,17 @@ fn on_update(
 	mut state: ResMut<State<super::ClientState>>,
 	windows: Res<Windows>,
 	mut change_lang: EventWriter<I18NChangeLanguageTo>,
+	mut local_server: LocalServerEvent<CreateServer>,
 ) {
 	// trace!("MainMenu State: Update");
 	if let Some(m) = &mut *main_menu_state {
-		m.render(&mut *egui_ctx, &mut state, &*windows, &mut change_lang);
+		m.render(
+			&mut *egui_ctx,
+			&mut state,
+			&*windows,
+			&mut change_lang,
+			&mut local_server,
+		);
 	}
 }
 

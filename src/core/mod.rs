@@ -63,10 +63,12 @@ impl Engine {
 
 		// Make sure server is added before clients so its runner won't override the client runner
 		if self.include_server {
+			#[cfg(feature = "server")]
 			app_builder.add_plugins(crate::server::ServerPlugin::default());
 		}
 
 		if self.include_client {
+			#[cfg(feature = "client_wgpu")]
 			app_builder.add_plugins(crate::client::ClientPlugin::default());
 		}
 

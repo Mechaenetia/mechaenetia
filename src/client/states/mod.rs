@@ -8,6 +8,7 @@ mod main_menu;
 pub enum ClientState {
 	Loading,
 	MainMenu,
+	JoinGame,
 	// Joining,
 	// Joined,
 	// Paused,

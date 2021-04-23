@@ -6,7 +6,7 @@ use tracing::log::LevelFilter;
 use unic_langid::LanguageIdentifier;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Mechaenetia", about = "Mechaenetia Game")]
+#[structopt()]
 pub struct CLIOpts {
 	/// Logging level override to bypass the logging config, can be: off, error, warn, info, debug, trace
 	#[structopt(short, long, parse(try_from_str))]

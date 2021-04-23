@@ -28,8 +28,9 @@ fluent-syntax = "0.11"
 fluent = "0.15"
 
 [features]
-default = ["client_wgpu"]
+default = ["client_wgpu", "server"]
 client_wgpu = ["bevy/bevy_audio", "bevy/bevy_gilrs", "bevy/bevy_wgpu", "bevy/bevy_winit", "bevy/render", "bevy/png", "bevy/hdr", "bevy/mp3", "bevy/x11", "bevy_egui", "bevy-inspector-egui"]
+server = []
 
 [lib]
 name = "mechaenetia"
