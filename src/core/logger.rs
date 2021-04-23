@@ -91,7 +91,7 @@ pub fn init_logging(config_dir: Option<&Path>) -> Result<(), Error> {
 
 			let config = Config::builder()
 				.appender(Appender::builder().build("stderr", Box::new(stderr)))
-				.logger(Logger::builder().build("mechaenetia", LevelFilter::Warn))
+				.logger(Logger::builder().build(env!("CARGO_PKG_NAME"), LevelFilter::Warn))
 				.build(Root::builder().appender("stderr").build(LevelFilter::Warn))?;
 
 			let _logger_handle = log4rs::init_config(config)?;

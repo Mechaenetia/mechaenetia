@@ -1,5 +1,6 @@
 mod states;
 
+use crate::universal::I18N;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy::window::WindowCloseRequested;
@@ -46,8 +47,13 @@ fn exit_on_window_close(
 	}
 }
 
-fn startup() {
+fn startup(mut windows: ResMut<Windows>, lang: Res<I18N>) {
 	trace!("Client startup");
+	let l_title = lang.get("title");
+	windows.iter_mut().for_each(|window| {
+		window.set_title(l_title.to_string());
+	});
+
 	// This spawns the camera that renders the 2D Bevy UI over the whole screen, not using bevy's UI
 	// currently, so its disabled for now...
 	// commands.spawn_bundle(UiCameraBundle::default());
