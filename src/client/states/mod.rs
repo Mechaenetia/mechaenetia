@@ -1,8 +1,8 @@
-use bevy::prelude::*;
-
 mod exiting;
 mod loading;
 mod main_menu;
+
+use bevy::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ClientState {

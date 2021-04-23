@@ -1,29 +1,25 @@
+mod states;
+
 use crate::universal::local_server::LocalServerExists;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 
 #[derive(Default)]
-pub struct ServerPlugin;
+pub struct ServerPluginGroup;
 
-impl PluginGroup for ServerPlugin {
+struct ServerPlugin;
+
+impl PluginGroup for ServerPluginGroup {
 	fn build(&mut self, group: &mut PluginGroupBuilder) {
 		group
 			.add(bevy::app::ScheduleRunnerPlugin::default())
-			.add(ServerPlugin);
+			.add(ServerPlugin)
+			.add(states::ServerStatePlugin::default());
 	}
 }
 
 impl Plugin for ServerPlugin {
 	fn build(&self, app: &mut AppBuilder) {
-		app.add_state(ServerState::NotRunning)
-			.insert_resource(LocalServerExists);
+		app.insert_resource(LocalServerExists);
 	}
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum ServerState {
-	NotRunning,
-	// Loading,
-	// Running,
-	// Paused,
 }

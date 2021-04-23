@@ -1,3 +1,4 @@
+use crate::universal::exit::{Exiting, RequestExit};
 use crate::universal::i18n::{
 	scan_languages_on_fs, I18NChangeLanguageTo, I18NLanguageChangedEvent,
 };
@@ -16,7 +17,8 @@ pub fn register_systems(app: &mut AppBuilder) {
 		.add_system_set(
 			SystemSet::on_update(state.clone())
 				.with_system(on_update.system())
-				.with_system(update_language.system()),
+				.with_system(update_language.system())
+				.with_system(on_shutdown.system()),
 		)
 		.add_system_set(SystemSet::on_exit(state.clone()).with_system(on_exit.system()));
 }
@@ -103,6 +105,7 @@ impl MainMenuState {
 		_windows: &Windows,
 		change_lang: &mut EventWriter<I18NChangeLanguageTo>,
 		local_server: &mut LocalServerEvent<CreateServer>,
+		exit: &mut EventWriter<RequestExit>,
 	) {
 		egui::TopPanel::top("top_title").show(e.ctx(), |ui| {
 			ui.centered_and_justified(|ui| {
@@ -110,7 +113,7 @@ impl MainMenuState {
 			});
 		});
 		egui::SidePanel::left("news_panel", 150.0).show(e.ctx(), |ui| {
-			self.render_main_menu(ui, state, local_server);
+			self.render_main_menu(ui, local_server, exit);
 		});
 		egui::CentralPanel::default().show(e.ctx(), |ui| {
 			match self.screen {
@@ -125,8 +128,8 @@ impl MainMenuState {
 	fn render_main_menu(
 		&mut self,
 		ui: &mut Ui,
-		state: &mut ResMut<State<super::ClientState>>,
 		local_server: &mut LocalServerEvent<CreateServer>,
+		exit: &mut EventWriter<RequestExit>,
 	) {
 		ui.vertical_centered_justified(|ui| {
 			let menu_btn =
@@ -161,9 +164,7 @@ impl MainMenuState {
 			);
 
 			if ui.button(&self.l_quit).clicked() {
-				state.overwrite_replace(super::ClientState::Exiting).expect(
-					"failed transitioning to exiting state by clicking exit main menu button",
-				);
+				exit.send(RequestExit);
 			};
 		});
 	}
@@ -240,7 +241,7 @@ impl MainMenuState {
 }
 
 fn on_enter(mut main_menu_state: ResMut<Option<MainMenuState>>, lang: Res<I18N>) {
-	trace!("MainMenu State: Enter");
+	trace!("Client MainMenu State: Enter");
 	// Make the main menu entity
 	*main_menu_state = Some(MainMenuState::new(&lang));
 }
@@ -252,8 +253,9 @@ fn on_update(
 	windows: Res<Windows>,
 	mut change_lang: EventWriter<I18NChangeLanguageTo>,
 	mut local_server: LocalServerEvent<CreateServer>,
+	mut exit: EventWriter<RequestExit>,
 ) {
-	// trace!("MainMenu State: Update");
+	// trace!("Client MainMenu State: Update");
 	if let Some(m) = &mut *main_menu_state {
 		m.render(
 			&mut *egui_ctx,
@@ -261,11 +263,20 @@ fn on_update(
 			&*windows,
 			&mut change_lang,
 			&mut local_server,
+			&mut exit,
 		);
 	}
 }
 
 fn on_exit(mut main_menu_state: ResMut<Option<MainMenuState>>) {
-	trace!("MainMenu State: Exit");
+	trace!("Client MainMenu State: Exit");
 	*main_menu_state = None;
+}
+
+fn on_shutdown(exiting: Option<Res<Exiting>>, mut state: ResMut<State<super::ClientState>>) {
+	if let Some(_exiting) = exiting {
+		state
+			.overwrite_replace(super::ClientState::Exiting)
+			.expect("Failed to transition Client to exiting state");
+	}
 }

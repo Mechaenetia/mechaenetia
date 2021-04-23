@@ -1,14 +1,17 @@
 mod states;
 
+use crate::universal::exit::RequestExit;
 use crate::universal::I18N;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy::window::WindowCloseRequested;
 
 #[derive(Default)]
-pub struct ClientPlugin;
+pub struct ClientPluginGroup;
 
-impl PluginGroup for ClientPlugin {
+struct ClientPlugin;
+
+impl PluginGroup for ClientPluginGroup {
 	fn build(&mut self, group: &mut PluginGroupBuilder) {
 		group
 			.add(bevy::render::RenderPlugin::default())
@@ -21,7 +24,7 @@ impl PluginGroup for ClientPlugin {
 			.add(bevy::gltf::GltfPlugin::default())
 			.add(bevy::winit::WinitPlugin::default())
 			.add(bevy::wgpu::WgpuPlugin::default())
-			.add(ClientPlugin::default())
+			.add(ClientPlugin)
 			.add(states::ClientStatePlugin::default());
 	}
 }
@@ -36,14 +39,12 @@ impl Plugin for ClientPlugin {
 
 fn exit_on_window_close(
 	mut windows_closed: EventReader<WindowCloseRequested>,
-	mut state: ResMut<State<states::ClientState>>,
+	mut exit: EventWriter<RequestExit>,
 ) {
 	// We only support a single window currently, change this if that changes
 	if let Some(window_closed) = windows_closed.iter().next() {
 		trace!("Window closed `{:?}`: exiting", window_closed.id);
-		state
-			.overwrite_replace(states::ClientState::Exiting)
-			.expect("failed transitioning to the exit state");
+		exit.send(RequestExit);
 	}
 }
 
