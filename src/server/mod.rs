@@ -1,6 +1,6 @@
 mod states;
 
-use crate::universal::local_server::LocalServerExists;
+use crate::universal::local_server::LocalServerPublicState;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 
@@ -20,6 +20,6 @@ impl PluginGroup for ServerPluginGroup {
 
 impl Plugin for ServerPlugin {
 	fn build(&self, app: &mut AppBuilder) {
-		app.insert_resource(LocalServerExists);
+		app.insert_resource(LocalServerPublicState::Off);
 	}
 }

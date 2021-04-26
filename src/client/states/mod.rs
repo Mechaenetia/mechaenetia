@@ -8,7 +8,7 @@ use bevy::prelude::*;
 pub enum ClientState {
 	Loading,
 	MainMenu,
-	JoinGame,
+	// JoinGame,
 	// Joining,
 	// Joined,
 	// Paused,

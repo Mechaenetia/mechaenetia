@@ -57,6 +57,7 @@ impl I18N {
 			}
 		}
 		let mut bundle = FluentBundle::new_concurrent(vec![language.clone()]);
+		bundle.set_use_isolating(false); // TODO: Remove this when the gui system used can print unicode text properly...
 		Self::add_language_resources_from_path(&mut bundle, &language.to_string(), path, false)?;
 		self.bundles.insert(0, bundle);
 		Ok(self)
@@ -207,7 +208,7 @@ impl I18N {
 			if let Some(msg) = bundle.get_message(id) {
 				if let Some(value) = msg.value() {
 					let args: FluentArgs<'i> = args.into_iter().collect();
-					// We can't point to things in the stackframe (since it's about to pop), so have
+					// We can't point to things in this stackframe (since it's about to pop), so have
 					// to make this owned.
 					return Cow::Owned(
 						Self::format_string(&bundle, id, value, Some(&args)).into_owned(),

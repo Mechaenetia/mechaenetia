@@ -1,14 +1,17 @@
 mod exiting;
+mod loading;
 mod not_running;
+mod unloading;
 
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum ServerState {
 	NotRunning,
-	// Loading,
-	// Running,
-	// Paused,
+	Loading,
+	Running,
+	Paused,
+	Unloading,
 	Exiting,
 }
 
@@ -19,7 +22,9 @@ impl Plugin for ServerStatePlugin {
 	fn build(&self, app: &mut AppBuilder) {
 		// Add the Server state into the system.
 		app.add_state(ServerState::NotRunning);
-		not_running::register_systems(app);
 		exiting::register_systems(app);
+		loading::register_systems(app);
+		unloading::register_systems(app);
+		not_running::register_systems(app);
 	}
 }

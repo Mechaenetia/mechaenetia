@@ -38,7 +38,11 @@ impl PluginGroup for UniversalPluginGroup {
 			.add(bevy::transform::TransformPlugin::default())
 			.add(bevy::diagnostic::DiagnosticsPlugin::default())
 			.add(bevy::input::InputPlugin::default())
-			.add(bevy::window::WindowPlugin::default())
+			// Don't exit on window close as we handle our own close handling
+			.add(bevy::window::WindowPlugin {
+				exit_on_close: false,
+				..Default::default()
+			})
 			.add(bevy::asset::AssetPlugin::default())
 			.add(bevy::scene::ScenePlugin::default())
 			.add(exit::ExitPlugin::default())

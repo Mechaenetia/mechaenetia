@@ -2,11 +2,13 @@ use crate::universal::exit::{Exiting, RequestExit};
 use crate::universal::i18n::{
 	scan_languages_on_fs, I18NChangeLanguageTo, I18NLanguageChangedEvent,
 };
-use crate::universal::local_server::{CreateServer, LocalServerEvent};
+use crate::universal::local_server::{LocalServerCommand, LocalServerPublicState};
 use crate::universal::I18N;
 use bevy::prelude::*;
 use bevy_egui::egui::Ui;
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
+use fluent::types::{FluentNumber, FluentNumberOptions, FluentNumberStyle};
+use fluent::FluentArgs;
 
 pub fn register_systems(app: &mut AppBuilder) {
 	let state = super::ClientState::MainMenu;
@@ -18,6 +20,7 @@ pub fn register_systems(app: &mut AppBuilder) {
 			SystemSet::on_update(state.clone())
 				.with_system(on_update.system())
 				.with_system(update_language.system())
+				.with_system(update_local_server_state.system())
 				.with_system(on_shutdown.system()),
 		)
 		.add_system_set(SystemSet::on_exit(state.clone()).with_system(on_exit.system()));
@@ -41,10 +44,53 @@ fn update_language(
 	}
 }
 
+fn update_local_server_state(
+	mut main_menu_state: ResMut<Option<MainMenuState>>,
+	lang: Res<I18N>,
+	mut state: EventReader<LocalServerPublicState>,
+) {
+	if let Some(state) = state.iter().last() {
+		if let Some(main_menu_state) = &mut *main_menu_state {
+			match state {
+				LocalServerPublicState::Off => {
+					main_menu_state.local_server_state_msg =
+						lang.get_attr("local-server-state", "off").into_owned();
+				}
+				LocalServerPublicState::Loading(completion) => {
+					let mut args = FluentArgs::with_capacity(1);
+					args.set(
+						"completion",
+						FluentNumber::new(
+							*completion,
+							FluentNumberOptions {
+								style: FluentNumberStyle::Percent,
+								..Default::default()
+							},
+						),
+					);
+					main_menu_state.local_server_state_msg = lang
+						.get_attr_with_args("local-server-state", "loading", &args)
+						.into_owned();
+				}
+				LocalServerPublicState::Running => {
+					main_menu_state.local_server_state_msg =
+						lang.get_attr("local-server-state", "running").into_owned();
+				}
+				LocalServerPublicState::ShuttingDown => {
+					main_menu_state.local_server_state_msg = lang
+						.get_attr("local-server-state", "shutting-down")
+						.into_owned();
+				}
+			}
+		}
+	}
+}
+
 #[derive(PartialEq, Eq)]
 enum MainMenuScreen {
 	Empty,
 	LocalServer,
+	LoadJoinLocalServer,
 	JoinServer,
 	Settings,
 }
@@ -62,6 +108,8 @@ struct MainMenuState {
 	l_title: String,
 	l_quit: String,
 	l_server_local: String,
+	l_server_local_starting: String,
+	l_server_local_starting_cancel: String,
 	l_server_local_test: String,
 	l_server_join: String,
 	l_settings_title: String,
@@ -69,6 +117,7 @@ struct MainMenuState {
 	l_settings_current_language: String,
 	l_settings_choose_language: String,
 	screen: MainMenuScreen,
+	local_server_state_msg: String,
 }
 
 impl MainMenuState {
@@ -90,6 +139,9 @@ impl MainMenuState {
 		self.l_title = lang.get("title").into_owned();
 		self.l_quit = lang.get("quit").into_owned();
 		self.l_server_local = lang.get("menu-server-local").into_owned();
+		self.l_server_local_starting = lang.get("menu-server-starting").into_owned();
+		self.l_server_local_starting_cancel =
+			lang.get_attr("menu-server-starting", "cancel").into_owned();
 		self.l_server_local_test = lang.get_attr("menu-server-local", "test").into_owned();
 		self.l_server_join = lang.get("menu-server-join").into_owned();
 		self.l_settings_title = lang.get("settings-title").into_owned();
@@ -104,7 +156,8 @@ impl MainMenuState {
 		state: &mut ResMut<State<super::ClientState>>,
 		_windows: &Windows,
 		change_lang: &mut EventWriter<I18NChangeLanguageTo>,
-		local_server: &mut LocalServerEvent<CreateServer>,
+		local_server_state: &Option<Res<LocalServerPublicState>>,
+		local_server_cmd: &mut EventWriter<LocalServerCommand>,
 		exit: &mut EventWriter<RequestExit>,
 	) {
 		egui::TopPanel::top("top_title").show(e.ctx(), |ui| {
@@ -112,23 +165,51 @@ impl MainMenuState {
 				ui.heading(&self.l_title);
 			});
 		});
-		egui::SidePanel::left("news_panel", 150.0).show(e.ctx(), |ui| {
-			self.render_main_menu(ui, local_server, exit);
-		});
-		egui::CentralPanel::default().show(e.ctx(), |ui| {
-			match self.screen {
-				MainMenuScreen::Empty => (),
-				MainMenuScreen::LocalServer => self.render_server_local(ui, state, local_server),
-				MainMenuScreen::JoinServer => self.render_server_join(ui, state),
-				MainMenuScreen::Settings => self.render_settings(ui, state, change_lang),
-			};
-		});
+		if self.screen == MainMenuScreen::LoadJoinLocalServer {
+			self.loading_local_server(e.ctx(), local_server_state, local_server_cmd);
+		} else {
+			egui::SidePanel::left("news_panel", 150.0).show(e.ctx(), |ui| {
+				self.render_main_menu(ui, local_server_state, exit);
+			});
+			egui::CentralPanel::default().show(e.ctx(), |ui| {
+				match self.screen {
+					MainMenuScreen::Empty => (),
+					MainMenuScreen::LocalServer => {
+						self.render_server_local(ui, local_server_state, local_server_cmd)
+					}
+					MainMenuScreen::LoadJoinLocalServer => (),
+					MainMenuScreen::JoinServer => self.render_server_join(ui, state),
+					MainMenuScreen::Settings => self.render_settings(ui, state, change_lang),
+				};
+			});
+		}
+	}
+
+	fn loading_local_server(
+		&mut self,
+		ctx: &egui::CtxRef,
+		local_server_state: &Option<Res<LocalServerPublicState>>,
+		local_server_cmd: &mut EventWriter<LocalServerCommand>,
+	) {
+		if let Some(_local_server_state) = local_server_state {
+			// if let LocalServerPublicState::Loading(msg)
+			egui::CentralPanel::default().show(ctx, |ui| {
+				ui.heading(&self.l_server_local_starting);
+				ui.label(&self.local_server_state_msg);
+				if ui.button(&self.l_server_local_starting_cancel).clicked() {
+					self.screen = MainMenuScreen::Empty;
+					local_server_cmd.send(LocalServerCommand::StopServer { force: true });
+				}
+			});
+		} else {
+			self.screen = MainMenuScreen::Empty;
+		}
 	}
 
 	fn render_main_menu(
 		&mut self,
 		ui: &mut Ui,
-		local_server: &mut LocalServerEvent<CreateServer>,
+		local_server_state: &Option<Res<LocalServerPublicState>>,
 		exit: &mut EventWriter<RequestExit>,
 	) {
 		ui.vertical_centered_justified(|ui| {
@@ -142,7 +223,7 @@ impl MainMenuState {
 					}
 				};
 
-			if local_server.exists() {
+			if local_server_state.is_some() {
 				menu_btn(
 					ui,
 					&mut self.screen,
@@ -172,17 +253,17 @@ impl MainMenuState {
 	fn render_server_local(
 		&mut self,
 		ui: &mut Ui,
-		state: &mut ResMut<State<super::ClientState>>,
-		local_server: &mut LocalServerEvent<CreateServer>,
+		local_server_exists: &Option<Res<LocalServerPublicState>>,
+		local_server_cmd: &mut EventWriter<LocalServerCommand>,
 	) {
 		ui.centered_and_justified(|ui| {
 			ui.vertical(|ui| {
-				if let Some(create_server) = local_server.event() {
+				if local_server_exists.is_some() {
 					if ui.button(&self.l_server_local_test).clicked() {
-						create_server.send(CreateServer::new("A New Server".to_owned()));
-						state
-							.push(super::ClientState::JoinGame)
-							.expect("Unable to switch to JoinGame state");
+						local_server_cmd.send(LocalServerCommand::StartServer {
+							title: "A New Server".to_owned(),
+						});
+						self.screen = MainMenuScreen::LoadJoinLocalServer;
 					}
 				}
 			});
@@ -217,7 +298,7 @@ impl MainMenuState {
 						for lang in &self.possible_languages {
 							if ui.radio(lang == &self.cur_lang, lang).clicked() {
 								change_lang.send(I18NChangeLanguageTo(lang.parse().expect(
-									"This was already confirmed valid, so why did this fail?",
+									"This was already confirmed valid, so should never fail, report this",
 								)));
 							}
 						}
@@ -252,7 +333,8 @@ fn on_update(
 	mut state: ResMut<State<super::ClientState>>,
 	windows: Res<Windows>,
 	mut change_lang: EventWriter<I18NChangeLanguageTo>,
-	mut local_server: LocalServerEvent<CreateServer>,
+	local_server_state: Option<Res<LocalServerPublicState>>,
+	mut local_server_cmd: EventWriter<LocalServerCommand>,
 	mut exit: EventWriter<RequestExit>,
 ) {
 	// trace!("Client MainMenu State: Update");
@@ -262,7 +344,8 @@ fn on_update(
 			&mut state,
 			&*windows,
 			&mut change_lang,
-			&mut local_server,
+			&local_server_state,
+			&mut local_server_cmd,
 			&mut exit,
 		);
 	}

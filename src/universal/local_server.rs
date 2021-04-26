@@ -1,5 +1,3 @@
-use bevy::ecs::component::Component;
-use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 #[derive(Default)]
@@ -7,42 +5,32 @@ pub(super) struct LocalServerPlugin;
 
 impl Plugin for LocalServerPlugin {
 	fn build(&self, app: &mut AppBuilder) {
-		app.add_event::<CreateServer>();
+		app.add_event::<LocalServerCommand>()
+			.add_event::<LocalServerPublicState>();
 	}
 }
 
-/// An even to request the LocalServer to create a new server
-pub struct CreateServer {
-	title: String,
+/// Event to send control commands to the LocalServer
+pub enum LocalServerCommand {
+	StartServer { title: String },
+	StopServer { force: bool },
 }
 
-impl CreateServer {
-	pub fn new(title: String) -> Self {
-		Self { title }
-	}
-}
-
-/// An empty resource that is inserted when the local server is compiled in, and doesn't when its not.
-pub struct LocalServerExists;
-
-/// A convenient holder to get both a `LocalServerExists` and a an event writer at the same time and
-/// only get the event if the server exists
-#[derive(SystemParam)]
-pub struct LocalServerEvent<'a, Event: Component> {
-	exists: Option<Res<'a, LocalServerExists>>,
-	event: EventWriter<'a, Event>,
-}
-
-impl<'a, Event: Component> LocalServerEvent<'a, Event> {
-	pub fn exists(&self) -> bool {
-		self.exists.is_some()
-	}
-
-	pub fn event(&mut self) -> Option<&mut EventWriter<'a, Event>> {
-		if self.exists() {
-			Some(&mut self.event)
-		} else {
-			None
-		}
-	}
+/// A resource that is inserted when the local server is compiled in, and doesn't when its not.
+///
+/// This should also always be sent as an event when it changes.
+///
+/// Do not add this resource in yourself unless you've implemented a local server for the client to
+/// communicate with.
+#[derive(Clone, PartialEq)]
+pub enum LocalServerPublicState {
+	/// A LocalServer is not running
+	Off,
+	/// A LocalServer is loading, the float is from 0.0 to 1.0 for percentage completion before the
+	/// server can be joined
+	Loading(f64),
+	/// A LocalServer is running and ready for connection
+	Running,
+	/// A LocalServer is shutting down
+	ShuttingDown,
 }

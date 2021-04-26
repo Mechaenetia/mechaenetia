@@ -36,6 +36,7 @@ impl Exiting {
 fn perform_exit(mut exit: EventWriter<AppExit>, mut exiting: Option<ResMut<Exiting>>) {
 	if let Some(exiting) = exiting.as_mut() {
 		if !exiting.delay {
+			info!("Exiting");
 			exit.send(AppExit);
 			if let Some(force_exit_delay) = exiting.force_exit_delay {
 				std::thread::spawn(move || {
