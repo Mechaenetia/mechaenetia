@@ -1,3 +1,4 @@
+pub mod commands;
 pub mod conditional_map;
 pub mod exit;
 pub mod i18n;

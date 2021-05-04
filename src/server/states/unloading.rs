@@ -45,10 +45,11 @@ fn on_shutdown(exiting: Option<Res<Exiting>>, mut state: ResMut<State<super::Ser
 fn on_server_public_cmd(mut cmds: EventReader<LocalServerCommand>) {
 	for cmd in cmds.iter() {
 		match cmd {
-			LocalServerCommand::StartServer { title: _ } => {
-				error!("Cannot load a server while unloading");
+			LocalServerCommand::CreateStartServer { .. } => {
+				error!("Cannot load a server while unloading: {:?}", &cmd);
 			}
 			LocalServerCommand::StopServer { force: _ } => {
+				warn!("`{:?}` requested when already stopping", &cmd);
 				// Already stopping...
 			}
 		}

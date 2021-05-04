@@ -1,3 +1,4 @@
+use crate::server::save::SaveConfig;
 use crate::universal::exit::Exiting;
 use crate::universal::local_server::{LocalServerCommand, LocalServerPublicState};
 use bevy::prelude::*;
@@ -17,8 +18,9 @@ pub fn register_systems(app: &mut AppBuilder) {
 fn on_enter(
 	mut public_state: ResMut<LocalServerPublicState>,
 	mut update_public_state: EventWriter<LocalServerPublicState>,
+	save_config_res: Res<Option<SaveConfig>>,
 ) {
-	trace!("Server Loading State: Enter");
+	trace!("Server Loading State: Enter: {:?}", &*save_config_res);
 	*public_state = LocalServerPublicState::Loading(0.0);
 	update_public_state.send(public_state.clone());
 }
@@ -52,13 +54,8 @@ fn on_server_public_cmd(
 ) {
 	for cmd in cmds.iter() {
 		match cmd {
-			LocalServerCommand::StartServer { title: _ } => {
-				// if title != self.title {
-				// 	error!(
-				// 		"Requested to start local server when it is already loading a different server: {}",
-				// 		title
-				// 	);
-				// }
+			LocalServerCommand::CreateStartServer { .. } => {
+				warn!("requested to CreateStartServer when already running a server");
 			}
 			LocalServerCommand::StopServer { force: _ } => {
 				info!("Unloading server from within loading state");

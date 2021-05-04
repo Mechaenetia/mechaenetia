@@ -1,3 +1,4 @@
+pub mod save;
 mod states;
 
 use crate::universal::local_server::LocalServerPublicState;
@@ -19,6 +20,7 @@ impl PluginGroup for ServerPluginGroup {
 
 impl Plugin for ServerPlugin {
 	fn build(&self, app: &mut AppBuilder) {
-		app.insert_resource(LocalServerPublicState::Off);
+		app.insert_resource(LocalServerPublicState::Off)
+			.init_resource::<Option<save::SaveConfig>>();
 	}
 }

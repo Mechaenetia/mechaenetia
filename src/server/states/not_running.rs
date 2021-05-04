@@ -1,3 +1,4 @@
+use crate::server::save::{SaveConfig, SaveLoadState};
 use crate::universal::exit::Exiting;
 use crate::universal::local_server::{LocalServerCommand, LocalServerPublicState};
 use bevy::prelude::*;
@@ -42,11 +43,37 @@ fn on_shutdown(exiting: Option<Res<Exiting>>, mut state: ResMut<State<super::Ser
 fn on_server_public_cmd(
 	mut cmds: EventReader<LocalServerCommand>,
 	mut state: ResMut<State<super::ServerState>>,
+	mut update_public_state: EventWriter<LocalServerPublicState>,
+	mut save_config_res: ResMut<Option<SaveConfig>>,
 ) {
 	for cmd in cmds.iter() {
 		match cmd {
-			LocalServerCommand::StartServer { title } => {
-				info!("Launching server: {}", title);
+			LocalServerCommand::CreateStartServer {
+				path,
+				config_only_if_not_existing,
+			} => {
+				info!("Launching server: {:?}", path);
+				let save_config = match SaveConfig::load_or_create_path(&path) {
+					Err(e) => {
+						update_public_state.send(LocalServerPublicState::Off);
+						error!(
+							"Error loading or creating SaveConfig at `{:?}`: {:?}",
+							&path, e
+						);
+						continue;
+					}
+					Ok(SaveLoadState::Existing(save_config)) => save_config,
+					Ok(SaveLoadState::Created(save_config)) => {
+						if *config_only_if_not_existing {
+							info!("Created Save Configuration at path: `{:?}`", &path);
+							update_public_state.send(LocalServerPublicState::Off);
+							continue;
+						} else {
+							save_config
+						}
+					}
+				};
+				*save_config_res = Some(save_config);
 				state
 					.set(super::ServerState::Loading)
 					.expect("Failed to transition server from NotRunning to Loading state");

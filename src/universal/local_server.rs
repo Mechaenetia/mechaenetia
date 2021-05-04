@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use std::path::PathBuf;
 
 #[derive(Default)]
 pub(super) struct LocalServerPlugin;
@@ -11,9 +12,15 @@ impl Plugin for LocalServerPlugin {
 }
 
 /// Event to send control commands to the LocalServer
+#[derive(Debug)]
 pub enum LocalServerCommand {
-	StartServer { title: String },
-	StopServer { force: bool },
+	CreateStartServer {
+		path: PathBuf,
+		config_only_if_not_existing: bool,
+	},
+	StopServer {
+		force: bool,
+	},
 }
 
 /// A resource that is inserted when the local server is compiled in, and doesn't when its not.

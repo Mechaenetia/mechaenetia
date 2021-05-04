@@ -9,6 +9,7 @@ use bevy_egui::egui::Ui;
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
 use fluent::types::{FluentNumber, FluentNumberOptions, FluentNumberStyle};
 use fluent::FluentArgs;
+use std::path::PathBuf;
 
 pub fn register_systems(app: &mut AppBuilder) {
 	let state = super::ClientState::MainMenu;
@@ -260,8 +261,9 @@ impl MainMenuState {
 			ui.vertical(|ui| {
 				if local_server_exists.is_some() {
 					if ui.button(&self.l_server_local_test).clicked() {
-						local_server_cmd.send(LocalServerCommand::StartServer {
-							title: "A New Server".to_owned(),
+						local_server_cmd.send(LocalServerCommand::CreateStartServer {
+							path: PathBuf::new().join("saves").join("local"),
+							config_only_if_not_existing: false,
 						});
 						self.screen = MainMenuScreen::LoadJoinLocalServer;
 					}
