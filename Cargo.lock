@@ -2373,6 +2373,7 @@ dependencies = [
  "lazy_static",
  "log4rs",
  "rayon",
+ "ron",
  "serde",
  "serde-value",
  "serde_derive",

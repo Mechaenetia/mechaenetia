@@ -49,7 +49,7 @@ type Bundle = FluentBundle<FluentResource, intl_memoizer::concurrent::IntlLangMe
 
 pub struct I18N {
 	root_path: PathBuf,
-	bundles: Vec<(Vec<Handle<I18NLanguageFile>>, Bundle)>,
+	bundles: Vec<(Vec<(bool, Handle<I18NLanguageFile>)>, Bundle)>,
 }
 
 pub struct I18NLanguageChangedEvent;
@@ -77,13 +77,16 @@ impl Plugin for I18NPlugin {
 			.init_asset_loader::<I18NLanguageFileAssetLoader>();
 
 		let mut lang = I18N::new(self.root_path.clone());
-		let asset_server = app
-			.app
-			.world
-			.get_resource::<AssetServer>()
-			.expect("`AssetServer` must be registered as a resource before `I18N` is built");
-		lang.change_language_to(&self.languages, asset_server)
-			.expect("initial language selected does not exist");
+
+		{
+			let world = app.app.world.cell();
+			let asset_server = world
+				.get_resource::<AssetServer>()
+				.expect("`AssetServer` must be registered as a resource before `I18N` is built");
+			let assets = world.get_resource::<Assets<I18NLanguageFile>>().expect("just registered asset is apparently missing its assets container for `I18NLanguageFile`");
+			lang.change_language_to(&self.languages, &*asset_server, &*assets)
+				.expect("initial language selected does not exist");
+		}
 
 		app.insert_resource(lang)
 			.add_system(language_asset_loaded.system())
@@ -98,13 +101,13 @@ fn language_asset_loaded(
 	mut lang: ResMut<I18N>,
 ) {
 	for ev in ev_asset.iter() {
-		info!("language_asset_loaded: {:?}", &ev);
+		info!("language asset state changed: {:?}", &ev);
 		match ev {
 			AssetEvent::Created { handle } => {
-				lang.update_bundle_for_matching_handle_asset(&handle, &*assets, &mut changed, false)
+				lang.update_bundle_for_matching_handle_asset(&handle, &*assets, &mut changed)
 			}
 			AssetEvent::Modified { handle } => {
-				lang.update_bundle_for_matching_handle_asset(&handle, &*assets, &mut changed, true)
+				lang.update_bundle_for_matching_handle_asset(&handle, &*assets, &mut changed)
 			}
 			AssetEvent::Removed { handle } => {
 				let _ = lang.remove_tracked_handle(&handle, &*assets, &mut changed);
@@ -127,21 +130,29 @@ impl I18N {
 		}
 	}
 
+	pub fn remaining_to_load(&self) -> usize {
+		self.bundles
+			.iter()
+			.map(|(handles, _bundle)| handles)
+			.flatten()
+			.filter(|(loaded, _handle)| !*loaded)
+			.count()
+	}
+
 	fn update_bundle_for_matching_handle_asset(
 		&mut self,
 		handle: &Handle<I18NLanguageFile>,
 		assets: &Assets<I18NLanguageFile>,
 		changed: &mut EventWriter<I18NLanguageChangedEvent>,
-		overriding: bool,
 	) {
 		if let Some(asset) = assets.get(handle) {
 			for (handles, bundle) in self.bundles.iter_mut() {
-				if handles.contains(handle) {
+				if let Some((loaded, _handle)) = handles.iter_mut().find(|t| t.1 == *handle) {
 					// Yes this re-parse is bad but FluentResource doesn't implement `Clone`.
 					// Ignoring errors since they were reported in the Asset itself earlier.
 					let res = FluentResource::try_new(asset.0.source().to_owned())
 						.unwrap_or_else(|(res, _errors)| res);
-					if overriding {
+					if *loaded {
 						bundle.add_resource_overriding(res);
 					} else {
 						if let Err(errors) = bundle.add_resource(res) {
@@ -150,6 +161,7 @@ impl I18N {
 							}
 						}
 					}
+					*loaded = true;
 					changed.send(I18NLanguageChangedEvent);
 					break;
 				}
@@ -164,11 +176,11 @@ impl I18N {
 		changed: &mut EventWriter<I18NLanguageChangedEvent>,
 	) -> Option<usize> {
 		for (idx, (handles, _bundle)) in self.bundles.iter_mut().enumerate() {
-			if let Some(i) =
-				handles
-					.iter()
-					.enumerate()
-					.find_map(|(i, h)| if h == handle { Some(i) } else { None })
+			if let Some(i) = handles
+				.iter()
+				.map(|(_enabled, handle)| handle)
+				.enumerate()
+				.find_map(|(i, h)| if h == handle { Some(i) } else { None })
 			{
 				handles.swap_remove(i);
 				self.reload_bundle_assets_at(assets, changed, idx);
@@ -187,7 +199,7 @@ impl I18N {
 		let (handles, bundle) = &mut self.bundles[idx];
 		*bundle = Bundle::new_concurrent(bundle.locales.clone());
 		bundle.set_use_isolating(false);
-		for handle in handles.iter() {
+		for (_enabled, handle) in handles.iter() {
 			if let Some(asset) = assets.get(handle) {
 				// Yes this re-parse is bad but FluentResource doesn't implement `Clone`.
 				// Ignoring errors since they were reported in the Asset itself earlier.
@@ -203,17 +215,34 @@ impl I18N {
 	fn init_bundle_from_language(
 		root_path: &Path,
 		asset_server: &AssetServer,
+		assets: &Assets<I18NLanguageFile>,
 		language: &LanguageIdentifier,
-	) -> Result<(Vec<Handle<I18NLanguageFile>>, Bundle), AssetServerError> {
+	) -> Result<(Vec<(bool, Handle<I18NLanguageFile>)>, Bundle), AssetServerError> {
+		let mut bundle = Bundle::new_concurrent(vec![language.clone()]);
+		bundle.set_use_isolating(false);
 		let mut path = root_path.to_owned();
 		path.push(language.to_string());
 		let handles = asset_server
 			.load_folder(&path)?
 			.iter()
-			.map(|h| h.clone().typed::<I18NLanguageFile>())
+			.map(|h| {
+				let handle = h.clone().typed::<I18NLanguageFile>();
+				// Pre-emptively try to load the asset if already available
+				let loaded = if let Some(asset) = assets.get(&handle) {
+					let res = FluentResource::try_new(asset.0.source().to_owned())
+						.unwrap_or_else(|(res, _errors)| res);
+					if let Err(errors) = bundle.add_resource(res) {
+						for error in errors {
+							error!("duplicate message already exists in bundle: {:?}", error);
+						}
+					}
+					true
+				} else {
+					false
+				};
+				(loaded, handle)
+			})
 			.collect();
-		let mut bundle = Bundle::new_concurrent(vec![language.clone()]);
-		bundle.set_use_isolating(false);
 		Ok((handles, bundle))
 	}
 
@@ -221,6 +250,7 @@ impl I18N {
 		&mut self,
 		languages: &Vec<LanguageIdentifier>,
 		asset_server: &AssetServer,
+		assets: &Assets<I18NLanguageFile>,
 	) -> Result<(), AssetServerError> {
 		if self.bundles.len() != languages.len()
 			|| self
@@ -233,7 +263,7 @@ impl I18N {
 			info!("changing language to: {:?}", languages);
 			self.bundles = languages
 				.iter()
-				.map(|l| Self::init_bundle_from_language(&self.root_path, asset_server, l))
+				.map(|l| Self::init_bundle_from_language(&self.root_path, asset_server, assets, l))
 				.collect::<Result<_, _>>()?;
 			Ok(())
 		} else {
@@ -412,9 +442,10 @@ fn change_language(
 	mut change: EventReader<I18NChangeLanguageTo>,
 	mut lang: ResMut<I18N>,
 	asset_server: Res<AssetServer>,
+	assets: Res<Assets<I18NLanguageFile>>,
 ) {
 	if let Some(I18NChangeLanguageTo(languages)) = change.iter().last() {
-		match lang.change_language_to(languages, &asset_server) {
+		match lang.change_language_to(languages, &asset_server, &assets) {
 			Ok(()) => {}
 			Err(e) => {
 				error!("failed changing language with error: `{:?}", e);

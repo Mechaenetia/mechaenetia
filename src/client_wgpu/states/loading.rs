@@ -1,5 +1,7 @@
 use crate::universal::exit::Exiting;
+use crate::universal::I18N;
 use bevy::prelude::*;
+use bevy_egui::{egui, EguiContext};
 
 pub fn register_systems(app: &mut AppBuilder) {
 	let state = super::ClientState::Loading;
@@ -16,12 +18,31 @@ fn on_enter() {
 	trace!("Client Loading State: Enter");
 }
 
-fn on_update(mut state: ResMut<State<super::ClientState>>) {
-	trace!("Client Loading State: Update");
-	// Nothing to do in the Loading state yet, so transition to the Main Menu state
-	state
-		.set(super::ClientState::MainMenu)
-		.expect("error while transitioning to the MainMenu state");
+fn on_update(
+	mut state: ResMut<State<super::ClientState>>,
+	lang: Res<I18N>,
+	egui_ctx: Res<EguiContext>,
+) {
+	// trace!("Client Loading State: Update");
+	// Acquire loading data...
+	let lang_to_load = lang.remaining_to_load();
+	info!("Languages left to load: {}", lang_to_load);
+	// Show loading state
+	egui::CentralPanel::default().show(egui_ctx.ctx(), |ui| {
+		ui.vertical_centered(|ui| {
+			ui.heading("Loading..."); // Skipping lang for this...
+			ui.horizontal(|ui| {
+				ui.label("Language files left to load:");
+				ui.label(lang_to_load.to_string());
+			});
+		});
+	});
+	// And test if ready to switch to main menu
+	if lang_to_load == 0 {
+		state
+			.set(super::ClientState::MainMenu)
+			.expect("error while transitioning to the MainMenu state");
+	}
 }
 
 fn on_exit() {

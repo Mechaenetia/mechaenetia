@@ -1,6 +1,7 @@
 mod states;
 
 use crate::universal::exit::RequestExit;
+use crate::universal::i18n::I18NLanguageChangedEvent;
 use crate::universal::I18N;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
@@ -33,6 +34,7 @@ impl Plugin for ClientWgpuPlugin {
 	fn build(&self, app: &mut AppBuilder) {
 		app.insert_resource(ClearColor(Color::rgb(0.0, 0.25, 0.0)))
 			.add_startup_system(startup.system())
+			.add_system(update_window_title_from_language.system())
 			.add_system(exit_on_window_close.system());
 	}
 }
@@ -48,14 +50,28 @@ fn exit_on_window_close(
 	}
 }
 
-fn startup(mut windows: ResMut<Windows>, lang: Res<I18N>) {
-	trace!("Client startup");
-	let l_title = lang.get("title");
+fn startup(mut windows: ResMut<Windows>) {
+	let title = env!("CARGO_PKG_NAME");
+	trace!("client_wgpu startup, setting title: {}", title);
 	windows.iter_mut().for_each(|window| {
-		window.set_title(l_title.to_string());
+		window.set_title(title.to_owned());
 	});
 
 	// This spawns the camera that renders the 2D Bevy UI over the whole screen, not using bevy's UI
 	// currently, so its disabled for now...
 	// commands.spawn_bundle(UiCameraBundle::default());
+}
+
+fn update_window_title_from_language(
+	mut windows: ResMut<Windows>,
+	lang: Res<I18N>,
+	mut event: EventReader<I18NLanguageChangedEvent>,
+) {
+	if event.iter().next().is_some() {
+		let l_title = lang.get("title");
+		trace!("client_wgpu title set on language change: {}", &l_title);
+		windows.iter_mut().for_each(|window| {
+			window.set_title(l_title.to_string());
+		});
+	}
 }
