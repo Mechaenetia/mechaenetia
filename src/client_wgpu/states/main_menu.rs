@@ -297,9 +297,9 @@ impl MainMenuState {
 					ui.horizontal_wrapped(|ui| {
 						for lang in &self.possible_languages {
 							if ui.radio(lang == &self.cur_lang, lang).clicked() {
-								change_lang.send(I18NChangeLanguageTo(lang.parse().expect(
+								change_lang.send(I18NChangeLanguageTo(vec![lang.parse().expect(
 									"This was already confirmed valid, so should never fail, report this",
-								)));
+								)]));
 							}
 						}
 					});

@@ -11,9 +11,11 @@ tracing = {version = "0.1", features = ["attributes", "log", "log-always"]}
 structopt = "0.3"
 serde_derive = "1.0"
 serde = {version = "1.0", features=["derive"]}
+serde-value = "0.7"
 serde_json = "1.0"
 anyhow = "1.0"
 thiserror = "1.0"
+lazy_static = "1.4.0"
 # Game Data dependencies
 indexmap = "1.6"
 smol_str = "0.1.17"
@@ -26,10 +28,13 @@ unic-langid = "0.9"
 intl-memoizer = "0.5"
 fluent-syntax = "0.11"
 fluent = "0.15"
+crossterm = { version = "0.19", optional = true}
+tui = { version = "0.14", default-features = false, features = ['crossterm'], optional = true }
 
 [features]
-default = ["client_wgpu", "server"]
+default = ["client_tui", "client_wgpu", "server"]
 client_wgpu = ["bevy/bevy_audio", "bevy/bevy_gilrs", "bevy/bevy_wgpu", "bevy/bevy_winit", "bevy/render", "bevy/png", "bevy/hdr", "bevy/mp3", "bevy/x11", "bevy_egui", "bevy-inspector-egui"]
+client_tui = ["crossterm", "tui"]
 server = []
 
 [lib]

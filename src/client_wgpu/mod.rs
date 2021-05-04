@@ -7,11 +7,11 @@ use bevy::prelude::*;
 use bevy::window::WindowCloseRequested;
 
 #[derive(Default)]
-pub struct ClientPluginGroup;
+pub struct ClientWgpuPluginGroup;
 
-struct ClientPlugin;
+struct ClientWgpuPlugin;
 
-impl PluginGroup for ClientPluginGroup {
+impl PluginGroup for ClientWgpuPluginGroup {
 	fn build(&mut self, group: &mut PluginGroupBuilder) {
 		group
 			.add(bevy::render::RenderPlugin::default())
@@ -24,12 +24,12 @@ impl PluginGroup for ClientPluginGroup {
 			.add(bevy::gltf::GltfPlugin::default())
 			.add(bevy::winit::WinitPlugin::default())
 			.add(bevy::wgpu::WgpuPlugin::default())
-			.add(ClientPlugin)
+			.add(ClientWgpuPlugin)
 			.add(states::ClientStatePlugin::default());
 	}
 }
 
-impl Plugin for ClientPlugin {
+impl Plugin for ClientWgpuPlugin {
 	fn build(&self, app: &mut AppBuilder) {
 		app.insert_resource(ClearColor(Color::rgb(0.0, 0.25, 0.0)))
 			.add_startup_system(startup.system())

@@ -12,7 +12,6 @@ struct ServerPlugin;
 impl PluginGroup for ServerPluginGroup {
 	fn build(&mut self, group: &mut PluginGroupBuilder) {
 		group
-			.add(bevy::app::ScheduleRunnerPlugin::default())
 			.add(ServerPlugin)
 			.add(states::ServerStatePlugin::default());
 	}

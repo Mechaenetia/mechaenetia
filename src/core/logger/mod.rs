@@ -1,6 +1,9 @@
+mod conditional_append_appender;
+mod launch_roll_file_appender;
+
 use log4rs::append::console::{ConsoleAppender, Target};
 use log4rs::config::runtime::ConfigErrors;
-use log4rs::config::{Appender, Config, Logger, Root};
+use log4rs::config::{Appender, Config, Deserializers, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use std::path::{Path, PathBuf};
 use tracing::log::{LevelFilter, SetLoggerError};
@@ -8,16 +11,33 @@ use tracing::log::{LevelFilter, SetLoggerError};
 const DEFAULT_LOGGING_DEFINITION: &'static str = r#"refresh_rate: 30 seconds
 
 appenders:
-  stdout:
-    kind: console
-    encoder:
-      kind: pattern
-      pattern: "{d} [{t}:{I}:{T}] {h({l})} {M}: {m}{n}"
+  console:
+    kind: conditional_appender
+    id: console
+    appender:
+      kind: console
+      encoder:
+        kind: pattern
+        pattern: "{d} [{t}:{I}:{T}] {h({l})} {M}: {m}{n}"
+  log_file:
+    kind: launch_roll_file
+    path: log/current.log
+    launch_roller:
+      kind: fixed_window
+      count: 5
+      pattern: log/previous-{}.log
+    appender:
+      kind: file
+      path: log/current.log
+      encoder:
+        kind: pattern
+        pattern: "{d} [{t}:{I}:{T}] {h({l})} {M}: {m}{n}"
 
 root:
   level: trace
   appenders:
-    - stdout
+    - console
+    - log_file
 
 loggers:
   tracing::span:
@@ -79,7 +99,16 @@ pub fn init_logging(config_dir: Option<&Path>) -> Result<(), Error> {
 				}
 				path
 			};
-			log4rs::init_file(logger_config, Default::default())?;
+			let mut deserializers = Deserializers::new();
+			deserializers.insert(
+				"launch_roll_file",
+				launch_roll_file_appender::RollFileOnLaunchAppenderDeserializer,
+			);
+			deserializers.insert(
+				"conditional_appender",
+				conditional_append_appender::ConditionallyAppendAppenderDeserializer,
+			);
+			log4rs::init_file(logger_config, deserializers)?;
 		}
 		None => {
 			let stderr = ConsoleAppender::builder()

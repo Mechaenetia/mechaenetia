@@ -1,18 +1,117 @@
+use bevy::asset::{AssetLoader, AssetServerError, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
-use fluent::{bundle::FluentBundle, FluentArgs, FluentError, FluentResource, FluentValue};
+use bevy::reflect::TypeUuid;
+use fluent::{bundle::FluentBundle, FluentArgs, FluentResource, FluentValue};
 use fluent_syntax::ast::Pattern;
 use std::borrow::Cow;
-use std::ffi::OsStr;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use unic_langid::{LanguageIdentifier, LanguageIdentifierError};
 
+#[derive(Debug, TypeUuid)]
+#[uuid = "4df317fb-0581-44f6-8b5f-7cbf12ddc460"]
+pub struct I18NLanguageFile(FluentResource);
+
+#[derive(Default)]
+pub struct I18NLanguageFileAssetLoader;
+
+impl AssetLoader for I18NLanguageFileAssetLoader {
+	fn load<'a>(
+		&'a self,
+		bytes: &'a [u8],
+		load_context: &'a mut LoadContext,
+	) -> BoxedFuture<'a, anyhow::Result<()>> {
+		Box::pin(async move {
+			let data = String::from_utf8(Vec::from(bytes))?;
+			let res = match FluentResource::try_new(data) {
+				Ok(res) => res,
+				Err((res, errors)) => {
+					for error in errors {
+						error!(
+							"`FluentResource` parse error from `{:?}`: {:?}",
+							load_context.path(),
+							error
+						);
+					}
+					res
+				}
+			};
+			load_context.set_default_asset(LoadedAsset::new(I18NLanguageFile(res)));
+			Ok(())
+		})
+	}
+
+	fn extensions(&self) -> &[&str] {
+		&["lang"]
+	}
+}
+
 type Bundle = FluentBundle<FluentResource, intl_memoizer::concurrent::IntlLangMemoizer>;
+
 pub struct I18N {
-	bundles: Vec<Bundle>,
+	root_path: PathBuf,
+	bundles: Vec<(Vec<Handle<I18NLanguageFile>>, Bundle)>,
 }
 
 pub struct I18NLanguageChangedEvent;
-pub struct I18NChangeLanguageTo(pub LanguageIdentifier);
+pub struct I18NChangeLanguageTo(pub Vec<LanguageIdentifier>);
+
+pub struct I18NPlugin {
+	root_path: PathBuf,
+	languages: Vec<LanguageIdentifier>,
+}
+
+impl I18NPlugin {
+	pub fn new(root_path: PathBuf, languages: Vec<LanguageIdentifier>) -> Self {
+		Self {
+			root_path,
+			languages,
+		}
+	}
+}
+
+impl Plugin for I18NPlugin {
+	fn build(&self, app: &mut AppBuilder) {
+		app.add_event::<I18NLanguageChangedEvent>()
+			.add_event::<I18NChangeLanguageTo>()
+			.add_asset::<I18NLanguageFile>()
+			.init_asset_loader::<I18NLanguageFileAssetLoader>();
+
+		let mut lang = I18N::new(self.root_path.clone());
+		let asset_server = app
+			.app
+			.world
+			.get_resource::<AssetServer>()
+			.expect("`AssetServer` must be registered as a resource before `I18N` is built");
+		lang.change_language_to(&self.languages, asset_server)
+			.expect("initial language selected does not exist");
+
+		app.insert_resource(lang)
+			.add_system(language_asset_loaded.system())
+			.add_system(change_language.system());
+	}
+}
+
+fn language_asset_loaded(
+	mut ev_asset: EventReader<AssetEvent<I18NLanguageFile>>,
+	assets: Res<Assets<I18NLanguageFile>>,
+	mut changed: EventWriter<I18NLanguageChangedEvent>,
+	mut lang: ResMut<I18N>,
+) {
+	for ev in ev_asset.iter() {
+		info!("language_asset_loaded: {:?}", &ev);
+		match ev {
+			AssetEvent::Created { handle } => {
+				lang.update_bundle_for_matching_handle_asset(&handle, &*assets, &mut changed, false)
+			}
+			AssetEvent::Modified { handle } => {
+				lang.update_bundle_for_matching_handle_asset(&handle, &*assets, &mut changed, true)
+			}
+			AssetEvent::Removed { handle } => {
+				let _ = lang.remove_tracked_handle(&handle, &*assets, &mut changed);
+			}
+		}
+	}
+}
 
 // #[derive(thiserror::Error, Debug)]
 // pub enum I18NError {
@@ -21,139 +120,151 @@ pub struct I18NChangeLanguageTo(pub LanguageIdentifier);
 // }
 
 impl I18N {
-	pub fn with_language_from_path(
-		language: LanguageIdentifier,
-		path: impl Into<PathBuf>,
-	) -> Result<Self, std::io::Error> {
-		let mut this = Self {
-			bundles: Vec::with_capacity(2),
-		};
-		this.add_language_from_path(language, path)?;
-		Ok(this)
-	}
-
-	pub fn swap_to_language(
-		&mut self,
-		language: LanguageIdentifier,
-		path: impl Into<PathBuf>,
-	) -> Result<&mut Self, std::io::Error> {
-		let old_language = self.get_current_language();
-		info!("Changing language from {} to {}", old_language, language);
-		if self.bundles.len() > 1 {
-			self.bundles.swap_remove(0);
-			self.bundles.resize_with(1, || unreachable!());
+	pub fn new(root_path: PathBuf) -> Self {
+		Self {
+			root_path,
+			bundles: vec![],
 		}
-		self.add_language_from_path(language, path)
 	}
 
-	pub fn add_language_from_path(
+	fn update_bundle_for_matching_handle_asset(
 		&mut self,
-		language: LanguageIdentifier,
-		path: impl Into<PathBuf>,
-	) -> Result<&mut Self, std::io::Error> {
-		for lang in self.bundles.iter().map(|b| b.locales.iter()).flatten() {
-			if language == *lang {
-				error!("Adding a language more than once: {}", &lang);
-			}
-		}
-		let mut bundle = FluentBundle::new_concurrent(vec![language.clone()]);
-		bundle.set_use_isolating(false); // TODO: Remove this when the gui system used can print unicode text properly...
-		Self::add_language_resources_from_path(&mut bundle, &language.to_string(), path, false)?;
-		self.bundles.insert(0, bundle);
-		Ok(self)
-	}
-
-	fn add_language_resource(
-		bundle: &mut Bundle,
-		id: &str,
-		resource_string: String,
+		handle: &Handle<I18NLanguageFile>,
+		assets: &Assets<I18NLanguageFile>,
+		changed: &mut EventWriter<I18NLanguageChangedEvent>,
 		overriding: bool,
 	) {
-		let res = match FluentResource::try_new(resource_string) {
-			Ok(res) => res,
-			Err((res, errors)) => {
-				for error in errors {
-					error!("Parse error from `{}`: {:?}", id, error);
-				}
-				res
-			}
-		};
-		if overriding {
-			bundle.add_resource_overriding(res);
-		} else {
-			match bundle.add_resource(res) {
-				Ok(()) => (),
-				Err(errors) => {
-					for error in errors {
-						error!("Parse error from `{}`: {:?}", id, error);
+		if let Some(asset) = assets.get(handle) {
+			for (handles, bundle) in self.bundles.iter_mut() {
+				if handles.contains(handle) {
+					// Yes this re-parse is bad but FluentResource doesn't implement `Clone`.
+					// Ignoring errors since they were reported in the Asset itself earlier.
+					let res = FluentResource::try_new(asset.0.source().to_owned())
+						.unwrap_or_else(|(res, _errors)| res);
+					if overriding {
+						bundle.add_resource_overriding(res);
+					} else {
+						if let Err(errors) = bundle.add_resource(res) {
+							for error in errors {
+								error!("duplicate message already exists in bundle: {:?}", error);
+							}
+						}
 					}
+					changed.send(I18NLanguageChangedEvent);
+					break;
 				}
 			}
 		}
 	}
 
-	fn add_language_resources_from_path(
-		bundle: &mut Bundle,
-		id: &str,
-		path: impl Into<PathBuf>,
-		overriding: bool,
-	) -> Result<(), std::io::Error> {
-		let path = path.into();
-		info!("Adding language resources from path: {:?}", &path);
-		if path.is_dir() {
-			for f in std::fs::read_dir(&path)? {
-				if let Ok(f) = f {
-					Self::add_language_resources_from_path(bundle, id, f.path(), overriding)?;
-				}
-			}
-		} else if path.is_file() {
-			if path.extension() == Some(OsStr::new("lang")) {
-				match std::fs::read_to_string(&path) {
-					Ok(resource_string) => {
-						Self::add_language_resource(bundle, id, resource_string, overriding);
-					}
-					Err(e) => {
-						error!(
-							"Failed reading language file `{:?}` because: {:?}",
-							&path, e
-						)
-					}
-				}
-			} else {
-				warn!(
-					"Ignoring unknown file in language resource directory: {:?}",
-					&path
-				);
-			}
-		} else {
-			error!(
-				"Attempted to process language path that doesn't exist: {:?}",
-				&path
-			);
-		}
-		Ok(())
-	}
-
-	pub fn add_language_function<F>(
+	fn remove_tracked_handle(
 		&mut self,
-		language: LanguageIdentifier,
-		id: &str,
-		func: F,
-	) -> Result<&mut Self, FluentError>
-	where
-		F: for<'a> Fn(&[FluentValue<'a>], &FluentArgs<'_>) -> FluentValue<'a>
-			+ Sync
-			+ Send
-			+ 'static,
-	{
-		for bundle in &mut self.bundles {
-			if bundle.locales.contains(&language) {
-				bundle.add_function(id, func)?;
-				break;
+		handle: &Handle<I18NLanguageFile>,
+		assets: &Assets<I18NLanguageFile>,
+		changed: &mut EventWriter<I18NLanguageChangedEvent>,
+	) -> Option<usize> {
+		for (idx, (handles, _bundle)) in self.bundles.iter_mut().enumerate() {
+			if let Some(i) =
+				handles
+					.iter()
+					.enumerate()
+					.find_map(|(i, h)| if h == handle { Some(i) } else { None })
+			{
+				handles.swap_remove(i);
+				self.reload_bundle_assets_at(assets, changed, idx);
+				return Some(idx);
 			}
 		}
-		Ok(self)
+		None
 	}
+
+	fn reload_bundle_assets_at(
+		&mut self,
+		assets: &Assets<I18NLanguageFile>,
+		changed: &mut EventWriter<I18NLanguageChangedEvent>,
+		idx: usize,
+	) {
+		let (handles, bundle) = &mut self.bundles[idx];
+		*bundle = Bundle::new_concurrent(bundle.locales.clone());
+		bundle.set_use_isolating(false);
+		for handle in handles.iter() {
+			if let Some(asset) = assets.get(handle) {
+				// Yes this re-parse is bad but FluentResource doesn't implement `Clone`.
+				// Ignoring errors since they were reported in the Asset itself earlier.
+				let res = FluentResource::try_new(asset.0.source().to_owned())
+					.unwrap_or_else(|(res, _errors)| res);
+				bundle.add_resource_overriding(res);
+			}
+		}
+		changed.send(I18NLanguageChangedEvent);
+		todo!()
+	}
+
+	fn init_bundle_from_language(
+		root_path: &Path,
+		asset_server: &AssetServer,
+		language: &LanguageIdentifier,
+	) -> Result<(Vec<Handle<I18NLanguageFile>>, Bundle), AssetServerError> {
+		let mut path = root_path.to_owned();
+		path.push(language.to_string());
+		let handles = asset_server
+			.load_folder(&path)?
+			.iter()
+			.map(|h| h.clone().typed::<I18NLanguageFile>())
+			.collect();
+		let mut bundle = Bundle::new_concurrent(vec![language.clone()]);
+		bundle.set_use_isolating(false);
+		Ok((handles, bundle))
+	}
+
+	pub fn change_language_to(
+		&mut self,
+		languages: &Vec<LanguageIdentifier>,
+		asset_server: &AssetServer,
+	) -> Result<(), AssetServerError> {
+		if self.bundles.len() != languages.len()
+			|| self
+				.bundles
+				.iter()
+				.map(|(_handles, bundle)| bundle.locales.first())
+				.zip(languages.iter())
+				.any(|(a, b)| a != Some(b))
+		{
+			info!("changing language to: {:?}", languages);
+			self.bundles = languages
+				.iter()
+				.map(|l| Self::init_bundle_from_language(&self.root_path, asset_server, l))
+				.collect::<Result<_, _>>()?;
+			Ok(())
+		} else {
+			info!(
+				"language change requested but it is already that language: {:?}",
+				languages
+			);
+			Ok(())
+		}
+	}
+
+	// pub fn add_language_function<F>(
+	// 	&mut self,
+	// 	language: LanguageIdentifier,
+	// 	id: &str,
+	// 	func: F,
+	// ) -> Result<&mut Self, FluentError>
+	// where
+	// 	F: for<'a> Fn(&[FluentValue<'a>], &FluentArgs<'_>) -> FluentValue<'a>
+	// 		+ Sync
+	// 		+ Send
+	// 		+ 'static,
+	// {
+	// 	for bundle in &mut self.bundles {
+	// 		if bundle.locales.contains(&language) {
+	// 			bundle.add_function(id, func)?;
+	// 			break;
+	// 		}
+	// 	}
+	// 	Ok(self)
+	// }
 
 	fn format_string<'s>(
 		bundle: &'s Bundle,
@@ -173,7 +284,7 @@ impl I18N {
 	}
 
 	pub fn get<'i, 's: 'i>(&'s self, id: &'i str) -> Cow<'i, str> {
-		for bundle in self.bundles.iter() {
+		for (_handles, bundle) in self.bundles.iter() {
 			if let Some(msg) = bundle.get_message(id) {
 				if let Some(value) = msg.value() {
 					return Self::format_string(&bundle, id, value, None);
@@ -186,7 +297,7 @@ impl I18N {
 	}
 
 	pub fn get_with_args<'i, 's: 'i>(&'s self, id: &'i str, args: &'i FluentArgs) -> Cow<'i, str> {
-		for bundle in self.bundles.iter() {
+		for (_handles, bundle) in self.bundles.iter() {
 			if let Some(msg) = bundle.get_message(id) {
 				if let Some(value) = msg.value() {
 					return Self::format_string(&bundle, id, value, Some(args));
@@ -204,7 +315,7 @@ impl I18N {
 		V: Into<FluentValue<'i>>,
 		I: IntoIterator<Item = (K, V)>,
 	{
-		for bundle in self.bundles.iter() {
+		for (_handles, bundle) in self.bundles.iter() {
 			if let Some(msg) = bundle.get_message(id) {
 				if let Some(value) = msg.value() {
 					let args: FluentArgs<'i> = args.into_iter().collect();
@@ -222,7 +333,7 @@ impl I18N {
 	}
 
 	pub fn get_attr<'i, 's: 'i>(&'s self, id: &'i str, attr: &'i str) -> Cow<'i, str> {
-		for bundle in self.bundles.iter() {
+		for (_handles, bundle) in self.bundles.iter() {
 			if let Some(msg) = bundle.get_message(id) {
 				if let Some(value) = msg.get_attribute(attr) {
 					return Self::format_string(&bundle, id, value.value(), None);
@@ -243,7 +354,7 @@ impl I18N {
 		attr: &'i str,
 		args: &'i FluentArgs,
 	) -> Cow<'i, str> {
-		for bundle in self.bundles.iter() {
+		for (_handles, bundle) in self.bundles.iter() {
 			if let Some(msg) = bundle.get_message(id) {
 				if let Some(value) = msg.get_attribute(attr) {
 					return Self::format_string(&bundle, id, value.value(), Some(args));
@@ -269,7 +380,7 @@ impl I18N {
 		V: Into<FluentValue<'i>>,
 		I: IntoIterator<Item = (K, V)>,
 	{
-		for bundle in self.bundles.iter() {
+		for (_handles, bundle) in self.bundles.iter() {
 			if let Some(msg) = bundle.get_message(id) {
 				if let Some(value) = msg.get_attribute(attr) {
 					let args: FluentArgs<'i> = args.into_iter().collect();
@@ -289,70 +400,25 @@ impl I18N {
 		Cow::Owned(format!("##~{}~@@~{}~##", id, attr))
 	}
 
-	pub fn get_current_language(&self) -> &LanguageIdentifier {
+	pub fn get_current_language(&self) -> LanguageIdentifier {
 		self.bundles
 			.first()
-			.expect("Should always have at least one language bundle, have none")
-			.locales
-			.first()
-			.expect("Locale should always be defined for language bundles")
-	}
-}
-
-pub struct I18NPlugin {
-	language: LanguageIdentifier,
-}
-
-impl I18NPlugin {
-	pub fn new(language: LanguageIdentifier) -> Self {
-		Self { language }
-	}
-}
-
-impl Plugin for I18NPlugin {
-	fn build(&self, app: &mut AppBuilder) {
-		let mut lang = I18N::with_language_from_path(
-			"en-US"
-				.parse()
-				.expect("Failed to parse `en-US` as a language"),
-			"./assets/lang/en-US",
-		)
-		.expect("Failed to construct I18N resource for language: ");
-
-		let mut language_path: PathBuf = "./assets/lang/".into();
-		language_path.push(self.language.to_string());
-		lang.add_language_from_path(self.language.clone(), language_path)
-			.expect("Failed to load I18N language");
-
-		app.add_event::<I18NLanguageChangedEvent>()
-			.add_event::<I18NChangeLanguageTo>()
-			.insert_resource(lang)
-			.add_system(change_language.system());
+			.map(|(_handles, b)| b.locales.first().cloned().unwrap_or_else(Default::default))
+			.unwrap_or_else(Default::default)
 	}
 }
 
 fn change_language(
 	mut change: EventReader<I18NChangeLanguageTo>,
 	mut lang: ResMut<I18N>,
-	mut notify: EventWriter<I18NLanguageChangedEvent>,
+	asset_server: Res<AssetServer>,
 ) {
-	let old_language = lang.get_current_language();
-	if let Some(I18NChangeLanguageTo(language)) = change
-		.iter()
-		.filter(|I18NChangeLanguageTo(language)| language != old_language)
-		.last()
-	{
-		let mut path: PathBuf = "./assets/lang".into();
-		path.push(language.to_string());
-		if path.exists() {
-			lang.swap_to_language(language.clone(), path)
-				.expect("Failed to swap to new language");
-			notify.send(I18NLanguageChangedEvent);
-		} else {
-			warn!(
-				"Requested to change to a language that does not exist: {}",
-				language
-			);
+	if let Some(I18NChangeLanguageTo(languages)) = change.iter().last() {
+		match lang.change_language_to(languages, &asset_server) {
+			Ok(()) => {}
+			Err(e) => {
+				error!("failed changing language with error: `{:?}", e);
+			}
 		}
 	}
 }
