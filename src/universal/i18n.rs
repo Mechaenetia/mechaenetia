@@ -1,3 +1,4 @@
+use bevy::app::Events;
 use bevy::asset::{AssetLoader, AssetServerError, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
@@ -84,8 +85,14 @@ impl Plugin for I18NPlugin {
 				.get_resource::<AssetServer>()
 				.expect("`AssetServer` must be registered as a resource before `I18N` is built");
 			let assets = world.get_resource::<Assets<I18NLanguageFile>>().expect("just registered asset is apparently missing its assets container for `I18NLanguageFile`");
-			lang.change_language_to(&self.languages, &*asset_server, &*assets)
-				.expect("initial language selected does not exist");
+			let mut changed_events= world.get_resource_mut::<Events<I18NLanguageChangedEvent>>().expect("just registered event is apparently missing its resource for I18NLanguageChangedEvent");
+			lang.change_language_to(
+				&self.languages,
+				&*asset_server,
+				&*assets,
+				&mut changed_events,
+			)
+			.expect("initial language selected does not exist");
 		}
 
 		app.insert_resource(lang)
@@ -139,6 +146,14 @@ impl I18N {
 			.count()
 	}
 
+	pub fn is_fully_loaded(&self) -> bool {
+		self.bundles
+			.iter()
+			.map(|(handles, _bundle)| handles)
+			.flatten()
+			.all(|(loaded, _handle)| *loaded)
+	}
+
 	fn update_bundle_for_matching_handle_asset(
 		&mut self,
 		handle: &Handle<I18NLanguageFile>,
@@ -162,9 +177,11 @@ impl I18N {
 						}
 					}
 					*loaded = true;
-					changed.send(I18NLanguageChangedEvent);
 					break;
 				}
+			}
+			if self.is_fully_loaded() {
+				changed.send(I18NLanguageChangedEvent);
 			}
 		}
 	}
@@ -208,7 +225,9 @@ impl I18N {
 				bundle.add_resource_overriding(res);
 			}
 		}
-		changed.send(I18NLanguageChangedEvent);
+		if self.is_fully_loaded() {
+			changed.send(I18NLanguageChangedEvent);
+		}
 		todo!()
 	}
 
@@ -251,6 +270,7 @@ impl I18N {
 		languages: &Vec<LanguageIdentifier>,
 		asset_server: &AssetServer,
 		assets: &Assets<I18NLanguageFile>,
+		changed: &mut Events<I18NLanguageChangedEvent>,
 	) -> Result<(), AssetServerError> {
 		if self.bundles.len() != languages.len()
 			|| self
@@ -265,6 +285,9 @@ impl I18N {
 				.iter()
 				.map(|l| Self::init_bundle_from_language(&self.root_path, asset_server, assets, l))
 				.collect::<Result<_, _>>()?;
+			if self.is_fully_loaded() {
+				changed.send(I18NLanguageChangedEvent);
+			}
 			Ok(())
 		} else {
 			info!(
@@ -322,7 +345,17 @@ impl I18N {
 			}
 		}
 
-		error!("I18N Message ID value not found: {}", id);
+		if let Some(locale) = self
+			.bundles
+			.first()
+			.map(|(_handles, bundle)| bundle.locales.first())
+			.flatten()
+		{
+			error!(
+				"I18N Message ID `{}` not found for language `{}`",
+				id, locale
+			);
+		}
 		Cow::Owned(format!("##~{}~##", id))
 	}
 
@@ -335,7 +368,17 @@ impl I18N {
 			}
 		}
 
-		error!("I18N Message ID value not found: {}", id);
+		if let Some(locale) = self
+			.bundles
+			.first()
+			.map(|(_handles, bundle)| bundle.locales.first())
+			.flatten()
+		{
+			error!(
+				"I18N Message ID `{}` not found for language `{}`",
+				id, locale
+			);
+		}
 		Cow::Owned(format!("##~{}~##", id))
 	}
 
@@ -358,7 +401,17 @@ impl I18N {
 			}
 		}
 
-		error!("I18N Message ID value not found: {}", id);
+		if let Some(locale) = self
+			.bundles
+			.first()
+			.map(|(_handles, bundle)| bundle.locales.first())
+			.flatten()
+		{
+			error!(
+				"I18N Message ID `{}` not found for language `{}`",
+				id, locale
+			);
+		}
 		Cow::Owned(format!("##~{}~##", id))
 	}
 
@@ -371,10 +424,17 @@ impl I18N {
 			}
 		}
 
-		error!(
-			"I18N Message ID and attr values not found: {:?} {:?}",
-			id, attr
-		);
+		if let Some(locale) = self
+			.bundles
+			.first()
+			.map(|(_handles, bundle)| bundle.locales.first())
+			.flatten()
+		{
+			error!(
+				"I18N Message ID `{}` and attr `{}` not found for language `{}`",
+				id, attr, locale
+			);
+		}
 		Cow::Owned(format!("##~{}~@@~{}~##", id, attr))
 	}
 
@@ -392,10 +452,17 @@ impl I18N {
 			}
 		}
 
-		error!(
-			"I18N Message ID and attr values not found: {:?} {:?}",
-			id, attr
-		);
+		if let Some(locale) = self
+			.bundles
+			.first()
+			.map(|(_handles, bundle)| bundle.locales.first())
+			.flatten()
+		{
+			error!(
+				"I18N Message ID `{}` and attr `{}` not found for language `{}`",
+				id, attr, locale
+			);
+		}
 		Cow::Owned(format!("##~{}~@@~{}~##", id, attr))
 	}
 
@@ -423,10 +490,17 @@ impl I18N {
 			}
 		}
 
-		error!(
-			"I18N Message ID and attr values not found: {:?} {:?}",
-			id, attr
-		);
+		if let Some(locale) = self
+			.bundles
+			.first()
+			.map(|(_handles, bundle)| bundle.locales.first())
+			.flatten()
+		{
+			error!(
+				"I18N Message ID `{}` and attr `{}` not found for language `{}`",
+				id, attr, locale
+			);
+		}
 		Cow::Owned(format!("##~{}~@@~{}~##", id, attr))
 	}
 
@@ -443,9 +517,10 @@ fn change_language(
 	mut lang: ResMut<I18N>,
 	asset_server: Res<AssetServer>,
 	assets: Res<Assets<I18NLanguageFile>>,
+	mut changed_events: ResMut<Events<I18NLanguageChangedEvent>>,
 ) {
 	if let Some(I18NChangeLanguageTo(languages)) = change.iter().last() {
-		match lang.change_language_to(languages, &asset_server, &assets) {
+		match lang.change_language_to(languages, &asset_server, &assets, &mut *changed_events) {
 			Ok(()) => {}
 			Err(e) => {
 				error!("failed changing language with error: `{:?}", e);
