@@ -530,6 +530,8 @@ fn change_language(
 }
 
 pub fn scan_languages_on_fs() -> Result<Vec<LanguageIdentifier>, std::io::Error> {
+	// TODO:  Move this to bevy's AssetIO once find a way to expose it...
+	// TODO:  Maybe load the AssetServer ourself and hold on to the AssetIO as well...
 	let mut ret = Vec::with_capacity(10);
 	for path in std::fs::read_dir("./assets/lang")?.flatten() {
 		if let Ok(file_type) = path.file_type() {
@@ -548,4 +550,206 @@ pub fn scan_languages_on_fs() -> Result<Vec<LanguageIdentifier>, std::io::Error>
 		}
 	}
 	Ok(ret)
+}
+
+#[derive(Debug)]
+pub struct MsgKey<'a, 'b, Args> {
+	key: Cow<'a, str>,
+	attr: Option<Cow<'b, str>>,
+	args: Args,
+}
+
+pub type MsgKey0<'a, 'b> = MsgKey<'a, 'b, ()>;
+pub type MsgKeyA<'a, 'b, 'z> = MsgKey<'a, 'b, FluentArgs<'z>>;
+
+impl<'a> MsgKey<'a, 'static, ()> {
+	pub const fn new(key: &'a str) -> MsgKey0<'a, 'static> {
+		Self {
+			key: Cow::Borrowed(key),
+			attr: None,
+			args: (),
+		}
+	}
+
+	pub fn with_attr<'z>(self, attr: impl Into<Cow<'z, str>>) -> MsgKey0<'a, 'z> {
+		MsgKey {
+			attr: Some(attr.into()),
+			..self
+		}
+	}
+}
+
+impl<'a, 'b> MsgKey<'a, 'b, ()> {
+	pub const fn new_attr(key: &'a str, attr: &'b str) -> Self {
+		MsgKey {
+			key: Cow::Borrowed(key),
+			attr: Some(Cow::Borrowed(attr)),
+			args: (),
+		}
+	}
+
+	pub fn with_args<'z>(&self, args: FluentArgs<'z>) -> MsgKeyA<'a, 'b, 'z> {
+		MsgKey {
+			key: self.key.clone(),
+			attr: self.attr.clone(),
+			args,
+		}
+	}
+
+	pub fn with_args_iter<'z, K, V, I>(&self, args: I) -> MsgKeyA<'a, 'b, 'z>
+	where
+		K: Into<Cow<'z, str>>,
+		V: Into<FluentValue<'z>>,
+		I: IntoIterator<Item = (K, V)>,
+	{
+		let args: FluentArgs<'z> = args.into_iter().collect();
+		MsgKey {
+			key: self.key.clone(),
+			attr: self.attr.clone(),
+			args,
+		}
+	}
+
+	pub fn translate<'i, 's: 'i>(&'i self, i18n: &'s I18n) -> Cow<'i, str> {
+		let key = self.key.as_ref();
+		if let Some(attr) = self.attr.as_ref().map(AsRef::as_ref) {
+			i18n.get_attr(key, attr)
+		} else {
+			i18n.get(key)
+		}
+	}
+}
+
+impl<'a, 'b, 'z> MsgKey<'a, 'b, FluentArgs<'z>> {
+	pub fn translate<'i, 's: 'i>(&'i self, i18n: &'s I18n) -> Cow<'i, str> {
+		let key = self.key.as_ref();
+		if let Some(attr) = self.attr.as_ref().map(AsRef::as_ref) {
+			i18n.get_attr_with_args(key, attr, &self.args)
+		} else {
+			i18n.get_with_args(key, &self.args)
+		}
+	}
+}
+
+pub struct MsgCache {
+	msg_key: MsgKey<'static, 'static, ()>,
+	msg: String,
+}
+
+impl MsgCache {
+	pub fn new(msg_key: MsgKey<'static, 'static, ()>) -> Self {
+		let msg = if let Some(attr) = &msg_key.attr {
+			format!("##~!!~{}~!{}!~!!~##", msg_key.key, attr)
+		} else {
+			format!("##~!!~{}~!!~##", msg_key.key)
+		};
+		Self { msg_key, msg }
+	}
+
+	pub fn no_attr(&mut self) -> &mut Self {
+		self.msg_key.attr = None;
+		self
+	}
+
+	pub fn attr(&mut self, attr: &'static str) -> &mut Self {
+		self.msg_key.attr = Some(Cow::Borrowed(attr));
+		self
+	}
+
+	pub fn update(&mut self, i18n: &I18n) {
+		self.msg = self.msg_key.translate(i18n).into_owned();
+	}
+
+	pub fn update_args(&mut self, i18n: &I18n, args: FluentArgs) {
+		self.msg = self.msg_key.with_args(args).translate(i18n).into_owned();
+	}
+
+	pub fn update_args_iter<'z, K, V, I>(&mut self, i18n: &I18n, args: I)
+	where
+		K: Into<Cow<'z, str>>,
+		V: Into<FluentValue<'z>>,
+		I: IntoIterator<Item = (K, V)>,
+	{
+		self.msg = self
+			.msg_key
+			.with_args_iter(args)
+			.translate(i18n)
+			.into_owned();
+	}
+
+	pub fn as_str(&self) -> &str {
+		&self.msg
+	}
+}
+
+#[cfg(test)]
+mod test {
+	use crate::universal::i18n::{Bundle, MsgKey};
+	use crate::universal::I18n;
+	use fluent::{FluentArgs, FluentResource};
+
+	fn test_i18n() -> I18n {
+		let mut i18n = I18n {
+			root_path: Default::default(),
+			bundles: vec![],
+		};
+		let mut bundle = Bundle::new_concurrent(vec!["en-US".parse().unwrap()]);
+		bundle.set_use_isolating(false);
+		bundle
+			.add_resource(
+				FluentResource::try_new(
+					r#"
+title = Test Title
+  .an_attr = Title Attr
+no_default =
+  .with_attr = No Default With Attr
+with_args = String arg is { $str_arg } and number arg is { $num_arg }
+  .just_str = String arg is {$str_arg}
+"#
+					.to_string(),
+				)
+				.unwrap(),
+			)
+			.unwrap();
+		i18n.bundles.push((vec![], bundle));
+		i18n
+	}
+
+	fn args() -> FluentArgs<'static> {
+		let mut args = FluentArgs::with_capacity(2);
+		args.set("str_arg", "stringy");
+		args.set("num_arg", 42);
+		args
+	}
+
+	#[test]
+	fn translate() {
+		let i18n = test_i18n();
+		assert_eq!(i18n.get("title"), "Test Title");
+		assert_eq!(i18n.get_attr("title", "an_attr"), "Title Attr");
+		assert_eq!(
+			i18n.get_with_args("with_args", &args()),
+			"String arg is stringy and number arg is 42"
+		);
+		assert_eq!(MsgKey::new("title").translate(&i18n), "Test Title");
+		assert_eq!(
+			MsgKey::new("title").with_attr("an_attr").translate(&i18n),
+			"Title Attr"
+		);
+		assert_eq!(
+			MsgKey::new("with_args")
+				.with_attr("just_str")
+				.with_args(args())
+				.translate(&i18n),
+			"String arg is stringy"
+		);
+		assert_eq!(
+			MsgKey::new("with_args")
+				.with_attr("just_str")
+				// TODO:  remove the `vec!` part when Rust 1.53 lands as then slices will implement IntoIterator
+				.with_args_iter(vec![("str_arg", "another")])
+				.translate(&i18n),
+			"String arg is another"
+		);
+	}
 }

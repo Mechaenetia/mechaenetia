@@ -1,6 +1,6 @@
 use crate::universal::exit::{Exiting, RequestExit};
 use crate::universal::i18n::{
-	scan_languages_on_fs, I18nChangeLanguageTo, I18nLanguageChangedEvent,
+	scan_languages_on_fs, I18nChangeLanguageTo, I18nLanguageChangedEvent, MsgCache, MsgKey,
 };
 use crate::universal::local_server::{LocalServerCommand, LocalServerPublicState};
 use crate::universal::I18n;
@@ -8,7 +8,6 @@ use bevy::prelude::*;
 use bevy_egui::egui::Ui;
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
 use fluent::types::{FluentNumber, FluentNumberOptions, FluentNumberStyle};
-use fluent::FluentArgs;
 use std::path::PathBuf;
 
 pub fn register_systems(app: &mut AppBuilder) {
@@ -54,33 +53,40 @@ fn update_local_server_state(
 		if let Some(main_menu_state) = &mut *main_menu_state {
 			match state {
 				LocalServerPublicState::Off => {
-					main_menu_state.local_server_state_msg =
-						lang.get_attr("local-server-state", "off").into_owned();
+					main_menu_state
+						.local_server_state_msg
+						.attr("off")
+						.update(&*lang);
 				}
 				LocalServerPublicState::Loading(completion) => {
-					let mut args = FluentArgs::with_capacity(1);
-					args.set(
-						"completion",
-						FluentNumber::new(
-							*completion,
-							FluentNumberOptions {
-								style: FluentNumberStyle::Percent,
-								..Default::default()
-							},
-						),
-					);
-					main_menu_state.local_server_state_msg = lang
-						.get_attr_with_args("local-server-state", "loading", &args)
-						.into_owned();
+					main_menu_state
+						.local_server_state_msg
+						.attr("loading")
+						.update_args_iter(
+							&*lang,
+							std::iter::once((
+								"completion",
+								FluentNumber::new(
+									*completion,
+									FluentNumberOptions {
+										style: FluentNumberStyle::Percent,
+										..Default::default()
+									},
+								),
+							)),
+						);
 				}
 				LocalServerPublicState::Running => {
-					main_menu_state.local_server_state_msg =
-						lang.get_attr("local-server-state", "running").into_owned();
+					main_menu_state
+						.local_server_state_msg
+						.attr("running")
+						.update(&*lang);
 				}
 				LocalServerPublicState::ShuttingDown => {
-					main_menu_state.local_server_state_msg = lang
-						.get_attr("local-server-state", "shutting-down")
-						.into_owned();
+					main_menu_state
+						.local_server_state_msg
+						.attr("shutting-down")
+						.update(&*lang);
 				}
 			}
 		}
@@ -102,23 +108,46 @@ impl Default for MainMenuScreen {
 	}
 }
 
-#[derive(Default)]
 struct MainMenuState {
 	cur_lang: String,
 	possible_languages: Vec<String>,
-	l_title: String,
-	l_quit: String,
-	l_server_local: String,
-	l_server_local_starting: String,
-	l_server_local_starting_cancel: String,
-	l_server_local_test: String,
-	l_server_join: String,
-	l_settings_title: String,
-	l_settings_cancel: String,
-	l_settings_current_language: String,
-	l_settings_choose_language: String,
+	l_title: MsgCache,
+	l_quit: MsgCache,
+	l_server_local: MsgCache,
+	l_server_local_starting: MsgCache,
+	l_server_local_starting_cancel: MsgCache,
+	l_server_local_test: MsgCache,
+	l_server_join: MsgCache,
+	l_settings_title: MsgCache,
+	l_settings_cancel: MsgCache,
+	l_settings_current_language: MsgCache,
+	l_settings_choose_language: MsgCache,
 	screen: MainMenuScreen,
-	local_server_state_msg: String,
+	local_server_state_msg: MsgCache,
+}
+
+impl Default for MainMenuState {
+	fn default() -> Self {
+		Self {
+			cur_lang: "".to_string(),
+			possible_languages: vec![],
+			l_title: MsgCache::new(MsgKey::new("title")),
+			l_quit: MsgCache::new(MsgKey::new("quit")),
+			l_server_local: MsgCache::new(MsgKey::new("menu-server-local")),
+			l_server_local_starting: MsgCache::new(MsgKey::new("menu-server-starting")),
+			l_server_local_starting_cancel: MsgCache::new(
+				MsgKey::new("menu-server-starting").with_attr("cancel"),
+			),
+			l_server_local_test: MsgCache::new(MsgKey::new("menu-server-local").with_attr("test")),
+			l_server_join: MsgCache::new(MsgKey::new("menu-server-join")),
+			l_settings_title: MsgCache::new(MsgKey::new("settings-title")),
+			l_settings_cancel: MsgCache::new(MsgKey::new("settings-cancel")),
+			l_settings_current_language: MsgCache::new(MsgKey::new("settings_current_language")),
+			l_settings_choose_language: MsgCache::new(MsgKey::new("settings_choose_language")),
+			screen: Default::default(),
+			local_server_state_msg: MsgCache::new(MsgKey::new("local-server-state")),
+		}
+	}
 }
 
 impl MainMenuState {
@@ -137,18 +166,17 @@ impl MainMenuState {
 			.map(|l| l.to_string())
 			.collect();
 		self.possible_languages.sort();
-		self.l_title = lang.get("title").into_owned();
-		self.l_quit = lang.get("quit").into_owned();
-		self.l_server_local = lang.get("menu-server-local").into_owned();
-		self.l_server_local_starting = lang.get("menu-server-starting").into_owned();
-		self.l_server_local_starting_cancel =
-			lang.get_attr("menu-server-starting", "cancel").into_owned();
-		self.l_server_local_test = lang.get_attr("menu-server-local", "test").into_owned();
-		self.l_server_join = lang.get("menu-server-join").into_owned();
-		self.l_settings_title = lang.get("settings-title").into_owned();
-		self.l_settings_cancel = lang.get("settings-cancel").into_owned();
-		self.l_settings_current_language = lang.get("settings_current_language").into_owned();
-		self.l_settings_choose_language = lang.get("settings_choose_language").into_owned();
+		self.l_title.update(lang);
+		self.l_quit.update(lang);
+		self.l_server_local.update(lang);
+		self.l_server_local_starting.update(lang);
+		self.l_server_local_starting_cancel.update(lang);
+		self.l_server_local_test.update(lang);
+		self.l_server_join.update(lang);
+		self.l_settings_title.update(lang);
+		self.l_settings_cancel.update(lang);
+		self.l_settings_current_language.update(lang);
+		self.l_settings_choose_language.update(lang);
 	}
 
 	fn render(
@@ -163,7 +191,7 @@ impl MainMenuState {
 	) {
 		egui::TopPanel::top("top_title").show(e.ctx(), |ui| {
 			ui.centered_and_justified(|ui| {
-				ui.heading(&self.l_title);
+				ui.heading(self.l_title.as_str());
 			});
 		});
 		if self.screen == MainMenuScreen::LoadJoinLocalServer {
@@ -195,9 +223,12 @@ impl MainMenuState {
 		if let Some(_local_server_state) = local_server_state {
 			// if let LocalServerPublicState::Loading(msg)
 			egui::CentralPanel::default().show(ctx, |ui| {
-				ui.heading(&self.l_server_local_starting);
-				ui.label(&self.local_server_state_msg);
-				if ui.button(&self.l_server_local_starting_cancel).clicked() {
+				ui.heading(self.l_server_local_starting.as_str());
+				ui.label(self.local_server_state_msg.as_str());
+				if ui
+					.button(self.l_server_local_starting_cancel.as_str())
+					.clicked()
+				{
 					self.screen = MainMenuScreen::Empty;
 					local_server_cmd.send(LocalServerCommand::StopServer { force: true });
 				}
@@ -229,23 +260,23 @@ impl MainMenuState {
 					ui,
 					&mut self.screen,
 					MainMenuScreen::LocalServer,
-					&self.l_server_local,
+					self.l_server_local.as_str(),
 				);
 			}
 			menu_btn(
 				ui,
 				&mut self.screen,
 				MainMenuScreen::JoinServer,
-				&self.l_server_join,
+				self.l_server_join.as_str(),
 			);
 			menu_btn(
 				ui,
 				&mut self.screen,
 				MainMenuScreen::Settings,
-				&self.l_settings_title,
+				self.l_settings_title.as_str(),
 			);
 
-			if ui.button(&self.l_quit).clicked() {
+			if ui.button(self.l_quit.as_str()).clicked() {
 				exit.send(RequestExit);
 			};
 		});
@@ -260,7 +291,7 @@ impl MainMenuState {
 		ui.centered_and_justified(|ui| {
 			ui.vertical(|ui| {
 				if local_server_exists.is_some() {
-					if ui.button(&self.l_server_local_test).clicked() {
+					if ui.button(self.l_server_local_test.as_str()).clicked() {
 						local_server_cmd.send(LocalServerCommand::CreateStartServer {
 							path: PathBuf::new().join("saves").join("local"),
 							config_only_if_not_existing: false,
@@ -289,13 +320,13 @@ impl MainMenuState {
 			frame.margin = (5.0, 5.0).into();
 			frame.show(ui, |ui| {
 				ui.vertical(|ui| {
-					ui.heading(&self.l_settings_title);
+					ui.heading(self.l_settings_title.as_str());
 					ui.separator();
 					ui.horizontal(|ui| {
-						ui.heading(&self.l_settings_current_language);
+						ui.heading(self.l_settings_current_language.as_str());
 						ui.label(&self.cur_lang);
 					});
-					ui.heading(&self.l_settings_choose_language);
+					ui.heading(self.l_settings_choose_language.as_str());
 					ui.horizontal_wrapped(|ui| {
 						for lang in &self.possible_languages {
 							if ui.radio(lang == &self.cur_lang, lang).clicked() {
@@ -306,7 +337,7 @@ impl MainMenuState {
 						}
 					});
 					ui.separator();
-					if ui.button(&self.l_settings_cancel).clicked() {
+					if ui.button(self.l_settings_cancel.as_str()).clicked() {
 						self.screen = MainMenuScreen::Empty;
 					}
 				});

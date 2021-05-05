@@ -1,7 +1,7 @@
 mod states;
 
 use crate::universal::exit::RequestExit;
-use crate::universal::i18n::I18nLanguageChangedEvent;
+use crate::universal::i18n::{I18nLanguageChangedEvent, MsgKey0};
 use crate::universal::I18n;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
@@ -62,16 +62,18 @@ fn startup(mut windows: ResMut<Windows>) {
 	// commands.spawn_bundle(UiCameraBundle::default());
 }
 
+const L_TITLE: MsgKey0 = MsgKey0::new("title");
+
 fn update_window_title_from_language(
 	mut windows: ResMut<Windows>,
 	lang: Res<I18n>,
 	mut event: EventReader<I18nLanguageChangedEvent>,
 ) {
 	if event.iter().next().is_some() {
-		let l_title = lang.get("title");
+		let l_title = L_TITLE.translate(&*lang).into_owned();
 		trace!("client_wgpu title set on language change: {}", &l_title);
 		windows.iter_mut().for_each(|window| {
-			window.set_title(l_title.to_string());
+			window.set_title(l_title.clone());
 		});
 	}
 }
