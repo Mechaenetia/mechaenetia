@@ -10,12 +10,12 @@ use unic_langid::{LanguageIdentifier, LanguageIdentifierError};
 
 #[derive(Debug, TypeUuid)]
 #[uuid = "4df317fb-0581-44f6-8b5f-7cbf12ddc460"]
-pub struct I18NLanguageFile(FluentResource);
+pub struct I18nLanguageFile(FluentResource);
 
 #[derive(Default)]
-pub struct I18NLanguageFileAssetLoader;
+pub struct I18nLanguageFileAssetLoader;
 
-impl AssetLoader for I18NLanguageFileAssetLoader {
+impl AssetLoader for I18nLanguageFileAssetLoader {
 	fn load<'a>(
 		&'a self,
 		bytes: &'a [u8],
@@ -36,32 +36,32 @@ impl AssetLoader for I18NLanguageFileAssetLoader {
 					res
 				}
 			};
-			load_context.set_default_asset(LoadedAsset::new(I18NLanguageFile(res)));
+			load_context.set_default_asset(LoadedAsset::new(I18nLanguageFile(res)));
 			Ok(())
 		})
 	}
 
 	fn extensions(&self) -> &[&str] {
-		&["lang"]
+		&["ftl"]
 	}
 }
 
 type Bundle = FluentBundle<FluentResource, intl_memoizer::concurrent::IntlLangMemoizer>;
 
-pub struct I18N {
+pub struct I18n {
 	root_path: PathBuf,
-	bundles: Vec<(Vec<(bool, Handle<I18NLanguageFile>)>, Bundle)>,
+	bundles: Vec<(Vec<(bool, Handle<I18nLanguageFile>)>, Bundle)>,
 }
 
-pub struct I18NLanguageChangedEvent;
-pub struct I18NChangeLanguageTo(pub Vec<LanguageIdentifier>);
+pub struct I18nLanguageChangedEvent;
+pub struct I18nChangeLanguageTo(pub Vec<LanguageIdentifier>);
 
-pub struct I18NPlugin {
+pub struct I18nPlugin {
 	root_path: PathBuf,
 	languages: Vec<LanguageIdentifier>,
 }
 
-impl I18NPlugin {
+impl I18nPlugin {
 	pub fn new(root_path: PathBuf, languages: Vec<LanguageIdentifier>) -> Self {
 		Self {
 			root_path,
@@ -70,22 +70,22 @@ impl I18NPlugin {
 	}
 }
 
-impl Plugin for I18NPlugin {
+impl Plugin for I18nPlugin {
 	fn build(&self, app: &mut AppBuilder) {
-		app.add_event::<I18NLanguageChangedEvent>()
-			.add_event::<I18NChangeLanguageTo>()
-			.add_asset::<I18NLanguageFile>()
-			.init_asset_loader::<I18NLanguageFileAssetLoader>();
+		app.add_event::<I18nLanguageChangedEvent>()
+			.add_event::<I18nChangeLanguageTo>()
+			.add_asset::<I18nLanguageFile>()
+			.init_asset_loader::<I18nLanguageFileAssetLoader>();
 
-		let mut lang = I18N::new(self.root_path.clone());
+		let mut lang = I18n::new(self.root_path.clone());
 
 		{
 			let world = app.app.world.cell();
 			let asset_server = world
 				.get_resource::<AssetServer>()
-				.expect("`AssetServer` must be registered as a resource before `I18N` is built");
-			let assets = world.get_resource::<Assets<I18NLanguageFile>>().expect("just registered asset is apparently missing its assets container for `I18NLanguageFile`");
-			let mut changed_events= world.get_resource_mut::<Events<I18NLanguageChangedEvent>>().expect("just registered event is apparently missing its resource for I18NLanguageChangedEvent");
+				.expect("`AssetServer` must be registered as a resource before `I18n` is built");
+			let assets = world.get_resource::<Assets<I18nLanguageFile>>().expect("just registered asset is apparently missing its assets container for `I18nLanguageFile`");
+			let mut changed_events= world.get_resource_mut::<Events<I18nLanguageChangedEvent>>().expect("just registered event is apparently missing its resource for I18nLanguageChangedEvent");
 			lang.change_language_to(
 				&self.languages,
 				&*asset_server,
@@ -102,10 +102,10 @@ impl Plugin for I18NPlugin {
 }
 
 fn language_asset_loaded(
-	mut ev_asset: EventReader<AssetEvent<I18NLanguageFile>>,
-	assets: Res<Assets<I18NLanguageFile>>,
-	mut changed: EventWriter<I18NLanguageChangedEvent>,
-	mut lang: ResMut<I18N>,
+	mut ev_asset: EventReader<AssetEvent<I18nLanguageFile>>,
+	assets: Res<Assets<I18nLanguageFile>>,
+	mut changed: EventWriter<I18nLanguageChangedEvent>,
+	mut lang: ResMut<I18n>,
 ) {
 	for ev in ev_asset.iter() {
 		info!("language asset state changed: {:?}", &ev);
@@ -124,12 +124,12 @@ fn language_asset_loaded(
 }
 
 // #[derive(thiserror::Error, Debug)]
-// pub enum I18NError {
+// pub enum I18nError {
 // 	#[error("Resource parse error: {0:?}")]
 // 	ResourceParseError(Vec<ParserError>),
 // }
 
-impl I18N {
+impl I18n {
 	pub fn new(root_path: PathBuf) -> Self {
 		Self {
 			root_path,
@@ -156,9 +156,9 @@ impl I18N {
 
 	fn update_bundle_for_matching_handle_asset(
 		&mut self,
-		handle: &Handle<I18NLanguageFile>,
-		assets: &Assets<I18NLanguageFile>,
-		changed: &mut EventWriter<I18NLanguageChangedEvent>,
+		handle: &Handle<I18nLanguageFile>,
+		assets: &Assets<I18nLanguageFile>,
+		changed: &mut EventWriter<I18nLanguageChangedEvent>,
 	) {
 		if let Some(asset) = assets.get(handle) {
 			for (handles, bundle) in self.bundles.iter_mut() {
@@ -181,16 +181,16 @@ impl I18N {
 				}
 			}
 			if self.is_fully_loaded() {
-				changed.send(I18NLanguageChangedEvent);
+				changed.send(I18nLanguageChangedEvent);
 			}
 		}
 	}
 
 	fn remove_tracked_handle(
 		&mut self,
-		handle: &Handle<I18NLanguageFile>,
-		assets: &Assets<I18NLanguageFile>,
-		changed: &mut EventWriter<I18NLanguageChangedEvent>,
+		handle: &Handle<I18nLanguageFile>,
+		assets: &Assets<I18nLanguageFile>,
+		changed: &mut EventWriter<I18nLanguageChangedEvent>,
 	) -> Option<usize> {
 		for (idx, (handles, _bundle)) in self.bundles.iter_mut().enumerate() {
 			if let Some(i) = handles
@@ -209,8 +209,8 @@ impl I18N {
 
 	fn reload_bundle_assets_at(
 		&mut self,
-		assets: &Assets<I18NLanguageFile>,
-		changed: &mut EventWriter<I18NLanguageChangedEvent>,
+		assets: &Assets<I18nLanguageFile>,
+		changed: &mut EventWriter<I18nLanguageChangedEvent>,
 		idx: usize,
 	) {
 		let (handles, bundle) = &mut self.bundles[idx];
@@ -226,7 +226,7 @@ impl I18N {
 			}
 		}
 		if self.is_fully_loaded() {
-			changed.send(I18NLanguageChangedEvent);
+			changed.send(I18nLanguageChangedEvent);
 		}
 		todo!()
 	}
@@ -234,9 +234,9 @@ impl I18N {
 	fn init_bundle_from_language(
 		root_path: &Path,
 		asset_server: &AssetServer,
-		assets: &Assets<I18NLanguageFile>,
+		assets: &Assets<I18nLanguageFile>,
 		language: &LanguageIdentifier,
-	) -> Result<(Vec<(bool, Handle<I18NLanguageFile>)>, Bundle), AssetServerError> {
+	) -> Result<(Vec<(bool, Handle<I18nLanguageFile>)>, Bundle), AssetServerError> {
 		let mut bundle = Bundle::new_concurrent(vec![language.clone()]);
 		bundle.set_use_isolating(false);
 		let mut path = root_path.to_owned();
@@ -245,7 +245,7 @@ impl I18N {
 			.load_folder(&path)?
 			.iter()
 			.map(|h| {
-				let handle = h.clone().typed::<I18NLanguageFile>();
+				let handle = h.clone().typed::<I18nLanguageFile>();
 				// Pre-emptively try to load the asset if already available
 				let loaded = if let Some(asset) = assets.get(&handle) {
 					let res = FluentResource::try_new(asset.0.source().to_owned())
@@ -269,8 +269,8 @@ impl I18N {
 		&mut self,
 		languages: &Vec<LanguageIdentifier>,
 		asset_server: &AssetServer,
-		assets: &Assets<I18NLanguageFile>,
-		changed: &mut Events<I18NLanguageChangedEvent>,
+		assets: &Assets<I18nLanguageFile>,
+		changed: &mut Events<I18nLanguageChangedEvent>,
 	) -> Result<(), AssetServerError> {
 		if self.bundles.len() != languages.len()
 			|| self
@@ -286,7 +286,7 @@ impl I18N {
 				.map(|l| Self::init_bundle_from_language(&self.root_path, asset_server, assets, l))
 				.collect::<Result<_, _>>()?;
 			if self.is_fully_loaded() {
-				changed.send(I18NLanguageChangedEvent);
+				changed.send(I18nLanguageChangedEvent);
 			}
 			Ok(())
 		} else {
@@ -352,7 +352,7 @@ impl I18N {
 			.flatten()
 		{
 			error!(
-				"I18N Message ID `{}` not found for language `{}`",
+				"I18n Message ID `{}` not found for language `{}`",
 				id, locale
 			);
 		}
@@ -375,7 +375,7 @@ impl I18N {
 			.flatten()
 		{
 			error!(
-				"I18N Message ID `{}` not found for language `{}`",
+				"I18n Message ID `{}` not found for language `{}`",
 				id, locale
 			);
 		}
@@ -408,7 +408,7 @@ impl I18N {
 			.flatten()
 		{
 			error!(
-				"I18N Message ID `{}` not found for language `{}`",
+				"I18n Message ID `{}` not found for language `{}`",
 				id, locale
 			);
 		}
@@ -431,7 +431,7 @@ impl I18N {
 			.flatten()
 		{
 			error!(
-				"I18N Message ID `{}` and attr `{}` not found for language `{}`",
+				"I18n Message ID `{}` and attr `{}` not found for language `{}`",
 				id, attr, locale
 			);
 		}
@@ -459,7 +459,7 @@ impl I18N {
 			.flatten()
 		{
 			error!(
-				"I18N Message ID `{}` and attr `{}` not found for language `{}`",
+				"I18n Message ID `{}` and attr `{}` not found for language `{}`",
 				id, attr, locale
 			);
 		}
@@ -497,7 +497,7 @@ impl I18N {
 			.flatten()
 		{
 			error!(
-				"I18N Message ID `{}` and attr `{}` not found for language `{}`",
+				"I18n Message ID `{}` and attr `{}` not found for language `{}`",
 				id, attr, locale
 			);
 		}
@@ -513,13 +513,13 @@ impl I18N {
 }
 
 fn change_language(
-	mut change: EventReader<I18NChangeLanguageTo>,
-	mut lang: ResMut<I18N>,
+	mut change: EventReader<I18nChangeLanguageTo>,
+	mut lang: ResMut<I18n>,
 	asset_server: Res<AssetServer>,
-	assets: Res<Assets<I18NLanguageFile>>,
-	mut changed_events: ResMut<Events<I18NLanguageChangedEvent>>,
+	assets: Res<Assets<I18nLanguageFile>>,
+	mut changed_events: ResMut<Events<I18nLanguageChangedEvent>>,
 ) {
-	if let Some(I18NChangeLanguageTo(languages)) = change.iter().last() {
+	if let Some(I18nChangeLanguageTo(languages)) = change.iter().last() {
 		match lang.change_language_to(languages, &asset_server, &assets, &mut *changed_events) {
 			Ok(()) => {}
 			Err(e) => {

@@ -1,5 +1,5 @@
 use crate::universal::exit::Exiting;
-use crate::universal::I18N;
+use crate::universal::I18n;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 
@@ -20,7 +20,7 @@ fn on_enter() {
 
 fn on_update(
 	mut state: ResMut<State<super::ClientState>>,
-	lang: Res<I18N>,
+	lang: Res<I18n>,
 	egui_ctx: Res<EguiContext>,
 ) {
 	// trace!("Client Loading State: Update");

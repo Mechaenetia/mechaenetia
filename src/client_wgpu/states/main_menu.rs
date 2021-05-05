@@ -1,9 +1,9 @@
 use crate::universal::exit::{Exiting, RequestExit};
 use crate::universal::i18n::{
-	scan_languages_on_fs, I18NChangeLanguageTo, I18NLanguageChangedEvent,
+	scan_languages_on_fs, I18nChangeLanguageTo, I18nLanguageChangedEvent,
 };
 use crate::universal::local_server::{LocalServerCommand, LocalServerPublicState};
-use crate::universal::I18N;
+use crate::universal::I18n;
 use bevy::prelude::*;
 use bevy_egui::egui::Ui;
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSettings};
@@ -35,8 +35,8 @@ fn update_egui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Re
 
 fn update_language(
 	mut main_menu_state: ResMut<Option<MainMenuState>>,
-	lang: Res<I18N>,
-	mut event: EventReader<I18NLanguageChangedEvent>,
+	lang: Res<I18n>,
+	mut event: EventReader<I18nLanguageChangedEvent>,
 ) {
 	if event.iter().next().is_some() {
 		if let Some(menu) = &mut *main_menu_state {
@@ -47,7 +47,7 @@ fn update_language(
 
 fn update_local_server_state(
 	mut main_menu_state: ResMut<Option<MainMenuState>>,
-	lang: Res<I18N>,
+	lang: Res<I18n>,
 	mut state: EventReader<LocalServerPublicState>,
 ) {
 	if let Some(state) = state.iter().last() {
@@ -122,14 +122,14 @@ struct MainMenuState {
 }
 
 impl MainMenuState {
-	fn new(lang: &I18N) -> Self {
+	fn new(lang: &I18n) -> Self {
 		trace!("Creating main menu");
 		let mut menu = MainMenuState::default();
 		menu.update_language(lang);
 		menu
 	}
 
-	fn update_language(&mut self, lang: &I18N) {
+	fn update_language(&mut self, lang: &I18n) {
 		self.cur_lang = lang.get_current_language().to_string();
 		self.possible_languages = scan_languages_on_fs()
 			.unwrap_or(vec![])
@@ -156,7 +156,7 @@ impl MainMenuState {
 		e: &mut EguiContext,
 		state: &mut ResMut<State<super::ClientState>>,
 		_windows: &Windows,
-		change_lang: &mut EventWriter<I18NChangeLanguageTo>,
+		change_lang: &mut EventWriter<I18nChangeLanguageTo>,
 		local_server_state: &Option<Res<LocalServerPublicState>>,
 		local_server_cmd: &mut EventWriter<LocalServerCommand>,
 		exit: &mut EventWriter<RequestExit>,
@@ -280,7 +280,7 @@ impl MainMenuState {
 		&mut self,
 		ui: &mut Ui,
 		_state: &mut ResMut<State<super::ClientState>>,
-		change_lang: &mut EventWriter<I18NChangeLanguageTo>,
+		change_lang: &mut EventWriter<I18nChangeLanguageTo>,
 	) {
 		ui.centered_and_justified(|ui| {
 			let mut frame = egui::Frame::none()
@@ -299,7 +299,7 @@ impl MainMenuState {
 					ui.horizontal_wrapped(|ui| {
 						for lang in &self.possible_languages {
 							if ui.radio(lang == &self.cur_lang, lang).clicked() {
-								change_lang.send(I18NChangeLanguageTo(vec![lang.parse().expect(
+								change_lang.send(I18nChangeLanguageTo(vec![lang.parse().expect(
 									"This was already confirmed valid, so should never fail, report this",
 								)]));
 							}
@@ -323,7 +323,7 @@ impl MainMenuState {
 	}
 }
 
-fn on_enter(mut main_menu_state: ResMut<Option<MainMenuState>>, lang: Res<I18N>) {
+fn on_enter(mut main_menu_state: ResMut<Option<MainMenuState>>, lang: Res<I18n>) {
 	trace!("Client MainMenu State: Enter");
 	// Make the main menu entity
 	*main_menu_state = Some(MainMenuState::new(&lang));
@@ -334,7 +334,7 @@ fn on_update(
 	mut main_menu_state: ResMut<Option<MainMenuState>>,
 	mut state: ResMut<State<super::ClientState>>,
 	windows: Res<Windows>,
-	mut change_lang: EventWriter<I18NChangeLanguageTo>,
+	mut change_lang: EventWriter<I18nChangeLanguageTo>,
 	local_server_state: Option<Res<LocalServerPublicState>>,
 	mut local_server_cmd: EventWriter<LocalServerCommand>,
 	mut exit: EventWriter<RequestExit>,

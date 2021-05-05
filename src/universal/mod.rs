@@ -4,7 +4,7 @@ pub mod exit;
 pub mod i18n;
 pub mod local_server;
 
-pub use i18n::I18N;
+pub use i18n::I18n;
 
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
@@ -55,7 +55,7 @@ impl PluginGroup for UniversalPluginGroup {
 			.add(bevy::scene::ScenePlugin::default())
 			.add(bevy::gltf::GltfPlugin::default())
 			.add(exit::ExitPlugin::default())
-			.add(i18n::I18NPlugin::new(
+			.add(i18n::I18nPlugin::new(
 				self.languages_root_path.clone(),
 				self.languages.clone(),
 			))

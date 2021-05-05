@@ -1,8 +1,8 @@
 mod states;
 
 use crate::universal::exit::RequestExit;
-use crate::universal::i18n::I18NLanguageChangedEvent;
-use crate::universal::I18N;
+use crate::universal::i18n::I18nLanguageChangedEvent;
+use crate::universal::I18n;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy::window::WindowCloseRequested;
@@ -64,8 +64,8 @@ fn startup(mut windows: ResMut<Windows>) {
 
 fn update_window_title_from_language(
 	mut windows: ResMut<Windows>,
-	lang: Res<I18N>,
-	mut event: EventReader<I18NLanguageChangedEvent>,
+	lang: Res<I18n>,
+	mut event: EventReader<I18nLanguageChangedEvent>,
 ) {
 	if event.iter().next().is_some() {
 		let l_title = lang.get("title");
