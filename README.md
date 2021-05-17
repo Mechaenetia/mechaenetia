@@ -190,16 +190,8 @@ rustflags = ["-Zshare-generics=y"]
 
 Learn about a bunch of Operating System things and different Hardware.
 
-Have OvermindDL1 actually available for real help (That will take quite a while)
-
-Stop getting distracted and start learning more Rust and Amethyst Stuff.
-
-Setup proper Rust Dev Environment for IDEA.
-
-Setup a Localization Library, because I don't want to accidentially miss any localizable Text when designing the UI.
+Stop getting distracted and start learning more Rust and Bevy Stuff.
 
 Setup Bevy and make a Basic Launcher UI.
 
 Setup a Default Workspace of sorts.
-
-Make a proper ReadMe once more stuff such as Libraries has been set up.
