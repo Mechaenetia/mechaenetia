@@ -25,7 +25,7 @@ You need to make sure you have vulkan drivers installed to be able to run the GU
 ##### Apt-based distributions (Ubuntu/Kubuntu/Debian/Etc..)
 
 ```zsh
-sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-composite0-dev
+sudo apt-get install build-essential pkg-config libx11-dev libasound2-dev libudev-dev libxcb-composite0-dev
 ```
 
 Depending on your graphics card, you may have to install one of the following to make certain your GPU drivers have vulkan interfaces if you don't already: `vulkan-radeon`, `vulkan-intel`, or `mesa-vulkan-drivers`
@@ -190,16 +190,8 @@ rustflags = ["-Zshare-generics=y"]
 
 Learn about a bunch of Operating System things and different Hardware.
 
-Have OvermindDL1 actually available for real help (That will take quite a while)
-
-Stop getting distracted and start learning more Rust and Amethyst Stuff.
-
-Setup proper Rust Dev Environment for IDEA.
-
-Setup a Localization Library, because I don't want to accidentially miss any localizable Text when designing the UI.
+Stop getting distracted and start learning more Rust and Bevy Stuff.
 
 Setup Bevy and make a Basic Launcher UI.
 
 Setup a Default Workspace of sorts.
-
-Make a proper ReadMe once more stuff such as Libraries has been set up.
