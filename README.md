@@ -25,7 +25,7 @@ You need to make sure you have vulkan drivers installed to be able to run the GU
 ##### Apt-based distributions (Ubuntu/Kubuntu/Debian/Etc..)
 
 ```zsh
-sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-composite0-dev
+sudo apt-get install build-essential pkg-config libx11-dev libasound2-dev libudev-dev libxcb-composite0-dev
 ```
 
 Depending on your graphics card, you may have to install one of the following to make certain your GPU drivers have vulkan interfaces if you don't already: `vulkan-radeon`, `vulkan-intel`, or `mesa-vulkan-drivers`
