@@ -10,3 +10,9 @@
 // pub mod prelude {
 // 	pub use crate::core::Engine;
 // }
+
+pub enum EngineState {
+	Menu,
+	Game,
+	Exit,
+}

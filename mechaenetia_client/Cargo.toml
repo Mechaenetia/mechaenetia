@@ -1,0 +1,10 @@
+[package]
+name = "mechaenetia_client"
+edition = "2021"
+version.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy.workspace = true
+mechaenetia_engine.workspace = true
+tracing.workspace = true

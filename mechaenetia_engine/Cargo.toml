@@ -1,0 +1,9 @@
+[package]
+name = "mechaenetia_engine"
+edition = "2021"
+version.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy.workspace = true
+tracing.workspace = true

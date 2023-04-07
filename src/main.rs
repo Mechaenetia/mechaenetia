@@ -1,8 +1,7 @@
-mod logging;
-
 use std::path::PathBuf;
 use bevy::prelude::*;
 use clap::Parser;
+use mechaenetia_utils::logging;
 
 // use mechaenetia::{core::ClientType, prelude::*};
 // use structopt::StructOpt;
@@ -40,7 +39,7 @@ pub struct Args {
 fn main() -> anyhow::Result<()> {
 	let args = Args::parse();
 	logging::init_logger(&args.log_args)?;
-	App::new().run();
+	App::new().add_plugins(DefaultPlugins).run();
 	Ok(())
 	
 	

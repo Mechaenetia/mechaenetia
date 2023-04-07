@@ -2124,13 +2124,40 @@ dependencies = [
 ]
 
 [[package]]
-name = "mechaenetia"
+name = "mechaenetia_client"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "mechaenetia_engine",
+ "tracing",
+]
+
+[[package]]
+name = "mechaenetia_client_wgpu"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "bevy",
  "clap",
- "smol_str",
+ "mechaenetia_client",
+ "mechaenetia_engine",
+ "mechaenetia_utils",
+ "tracing",
+]
+
+[[package]]
+name = "mechaenetia_engine"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "tracing",
+]
+
+[[package]]
+name = "mechaenetia_utils"
+version = "0.1.0"
+dependencies = [
+ "clap",
  "tracing",
  "tracing-subscriber",
 ]
@@ -2829,15 +2856,6 @@ name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "smol_str"
-version = "0.1.24"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fad6c857cbab2627dcf01ec85a623ca4e7dcb5691cbaa3d7fb7653671f0d09c9"
 dependencies = [
  "serde",
 ]

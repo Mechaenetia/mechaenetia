@@ -1,0 +1,14 @@
+[package]
+name = "mechaenetia_client_wgpu"
+edition = "2021"
+version.workspace = true
+authors.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+bevy.workspace = true
+clap.workspace = true
+mechaenetia_client.workspace = true
+mechaenetia_engine.workspace = true
+mechaenetia_utils.workspace = true
+tracing.workspace = true
