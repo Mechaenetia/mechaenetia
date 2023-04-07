@@ -6,37 +6,47 @@ edition = "2018"
 
 [dependencies]
 # Base system dependencies
-log4rs = {version = "1.0", features = ["toml_format"]}
-tracing = {version = "0.1", features = ["attributes", "log", "log-always"]}
-structopt = "0.3"
-serde_derive = "1.0"
-serde = {version = "1.0", features=["derive"]}
-serde-value = "0.7"
-serde_json = "1.0"
-ron = "0.6.4"
 anyhow = "1.0"
-thiserror = "1.0"
-lazy_static = "1.4.0"
+clap = { version = "4.2", features = ["derive", "env"] }
+#lazy_static = "1.4.0"
+#log4rs = {version = "1.0", features = ["toml_format"]}
+#ron = "0.6.4"
+#serde = {version = "1.0", features=["derive"]}
+#serde-value = "0.7"
+#serde_derive = "1.0"
+#serde_json = "1.0"
+#thiserror = "1.0"
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = ["json", "env-filter", "registry"] }
 # Game Data dependencies
-indexmap = "1.6"
-smol_str = "0.1.17"
-rayon = "1.5"
+#indexmap = "1.6"
+#rayon = "1.5"
+smol_str = "0.1"
 # Game Engine dependencies
-bevy = { version = "0.5", default_features = false, features = ["trace", "bevy_dynamic_plugin", "bevy_gltf"] }
-bevy_egui = { version = "0.4", optional = true }
-bevy-inspector-egui = { version = "0.4", optional = true }
-unic-langid = "0.9"
-intl-memoizer = "0.5"
-fluent-syntax = "0.11"
-fluent = "0.15"
-crossterm = { version = "0.19", optional = true}
-tui = { version = "0.14", default-features = false, features = ['crossterm'], optional = true }
+bevy = "0.10"
+#bevy-inspector-egui = { version = "0.4", optional = true }
+#bevy_egui = { version = "0.4", optional = true }
+#crossterm = { version = "0.19", optional = true}
+#fluent = "0.15"
+#fluent-syntax = "0.11"
+#intl-memoizer = "0.5"
+#tui = { version = "0.14", default-features = false, features = ['crossterm'], optional = true }
+#unic-langid = "0.9"
 
 [features]
-default = ["client_tui", "client_wgpu", "server"]
-client_wgpu = ["bevy/bevy_audio", "bevy/bevy_gilrs", "bevy/bevy_wgpu", "bevy/bevy_winit", "bevy/render", "bevy/png", "bevy/hdr", "bevy/mp3", "bevy/x11", "bevy_egui", "bevy-inspector-egui"]
-client_tui = ["crossterm", "tui"]
-server = []
+#default = ["client_tui", "client_wgpu", "server"]
+#client_wgpu = ["bevy/bevy_audio", "bevy/bevy_gilrs", "bevy/bevy_wgpu", "bevy/bevy_winit", "bevy/render", "bevy/png", "bevy/hdr", "bevy/mp3", "bevy/x11", "bevy_egui", "bevy-inspector-egui"]
+#client_tui = ["crossterm", "tui"]
+#server = []
+
+[workspace]
+resolver = "2"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
 
 [lib]
 name = "mechaenetia"

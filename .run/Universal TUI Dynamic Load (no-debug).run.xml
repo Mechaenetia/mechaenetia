@@ -1,11 +1,13 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Universal TUI Dynamic Load (no-debug)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --features bevy/dynamic -- --config-dir ./config --client tui" />
+    <option name="command" value="run --features bevy/dynamic_linking -- --config-dir ./config --client tui" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+    <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
     <option name="allFeatures" value="false" />
-    <option name="emulateTerminal" value="true" />
+    <option name="withSudo" value="false" />
+    <option name="buildTarget" value="REMOTE" />
     <option name="backtrace" value="SHORT" />
     <envs />
     <option name="isRedirectInput" value="false" />
