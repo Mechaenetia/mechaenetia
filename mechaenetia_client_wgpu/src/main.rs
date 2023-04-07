@@ -14,7 +14,7 @@ pub struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-	let args = Args::parse();
+	// let args = Args::parse();
 	// logging::init_logger(&args.log_args)?;
 	App::new().add_plugins(DefaultPlugins).run();
 	Ok(())
