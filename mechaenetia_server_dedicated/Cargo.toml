@@ -1,5 +1,5 @@
 [package]
-name = "mechaenetia_client_wgpu"
+name = "mechaenetia_server_dedicated"
 edition = "2021"
 version.workspace = true
 authors.workspace = true

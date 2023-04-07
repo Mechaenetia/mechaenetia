@@ -1,0 +1,9 @@
+[package]
+name = "mechaenetia_server"
+version.workspace = true
+authors.workspace = true
+
+[dependencies]
+bevy.workspace = true
+mechaenetia_engine.workspace = true
+tracing.workspace = true

@@ -4,7 +4,7 @@ use tracing::Level;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::util::TryInitError;
-use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum LogFormat {
@@ -23,6 +23,10 @@ pub struct LogArgs {
 	/// Log format type on stderr.
 	#[arg(value_enum, long, default_value_t = LogFormat::Compact)]
 	pub log_format: LogFormat,
+
+	/// Log filter format string
+	#[arg(long, env = "LOG_FILTER", default_value = "")]
+	pub log_filter: String,
 }
 
 #[derive(Debug)]
@@ -66,7 +70,11 @@ pub fn init_logger(args: &LogArgs) -> Result<(), LoggerError> {
 			Level::TRACE => FmtSpan::FULL,
 		})
 		.with_target(true)
-		.with_ansi(true);
+		.with_ansi(true)
+		.with_env_filter(EnvFilter::try_new(&args.log_filter).unwrap_or_else(|err| {
+			eprintln!("Invalid log filter: {}", err);
+			EnvFilter::new(&args.log_filter)
+		}));
 	match args.log_format {
 		LogFormat::Compact => builder.compact().finish().try_init()?,
 		LogFormat::Pretty => builder.pretty().finish().try_init()?,

@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Client Mold Dynamic Load (no-debug)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --features bevy/dynamic_linking -- --config-dir ./config --no-server" />
+  <configuration default="false" name="Client WGPU" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="command" value="run --bin mechaenetia_client_wgpu -- --config-dir ./config" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="emulateTerminal" value="false" />
     <option name="channel" value="DEFAULT" />
@@ -9,10 +9,7 @@
     <option name="withSudo" value="false" />
     <option name="buildTarget" value="REMOTE" />
     <option name="backtrace" value="SHORT" />
-    <envs>
-      <env name="LD_PRELOAD" value="/usr/local/lib/mold/mold-wrapper.so" />
-      <env name="MOLD_PATH" value="/usr/local/bin/mold" />
-    </envs>
+    <envs />
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
     <method v="2" />

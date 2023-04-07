@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Test Dynamic Load (no-debug)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="test --features bevy/dynamic_linking" />
+    <option name="command" value="test --workspace --features bevy/dynamic_linking" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="emulateTerminal" value="false" />
     <option name="channel" value="DEFAULT" />
@@ -12,8 +12,6 @@
     <envs />
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
-    <method v="2">
-      <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-    </method>
+    <method v="2" />
   </configuration>
 </component>

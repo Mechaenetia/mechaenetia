@@ -2141,6 +2141,7 @@ dependencies = [
  "clap",
  "mechaenetia_client",
  "mechaenetia_engine",
+ "mechaenetia_server",
  "mechaenetia_utils",
  "tracing",
 ]
@@ -2150,6 +2151,29 @@ name = "mechaenetia_engine"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "tracing",
+]
+
+[[package]]
+name = "mechaenetia_server"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "mechaenetia_engine",
+ "tracing",
+]
+
+[[package]]
+name = "mechaenetia_server_dedicated"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "clap",
+ "mechaenetia_client",
+ "mechaenetia_engine",
+ "mechaenetia_server",
+ "mechaenetia_utils",
  "tracing",
 ]
 

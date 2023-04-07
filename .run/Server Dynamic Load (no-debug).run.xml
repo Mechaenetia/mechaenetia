@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Server Dynamic Load (no-debug)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --features bevy/dynamic_linking -- --no-client --config-dir ./config" />
+    <option name="command" value="run --features bevy/dynamic_linking --bin mechaenetia_server_dedicated -- --config-dir ./config" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="emulateTerminal" value="false" />
     <option name="channel" value="DEFAULT" />
@@ -12,8 +12,6 @@
     <envs />
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
-    <method v="2">
-      <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-    </method>
+    <method v="2" />
   </configuration>
 </component>

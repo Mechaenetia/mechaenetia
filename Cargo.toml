@@ -11,6 +11,8 @@ members = [
 	"mechaenetia_engine",
 	"mechaenetia_client",
 	"mechaenetia_client_wgpu",
+	"mechaenetia_server",
+	"mechaenetia_server_dedicated",
 ]
 
 [workspace.package]
@@ -22,6 +24,7 @@ authors = ["Gregorius Techneticies <gregoriustech@gmail.com>", "OvermindDL1 <ove
 mechaenetia_client = { path = "mechaenetia_client" }
 mechaenetia_client_wgpu = { path = "mechaenetia_client_wgpu" }
 mechaenetia_engine = { path = "mechaenetia_engine" }
+mechaenetia_server = { path = "mechaenetia_server" }
 mechaenetia_utils = { path = "mechaenetia_utils" }
 # Base system dependencies
 anyhow = "1.0"
@@ -41,7 +44,7 @@ tracing-subscriber = { version = "0.3.16", features = ["json", "env-filter", "re
 #rayon = "1.5"
 smol_str = "0.1"
 # Game Engine dependencies
-bevy = "0.10"
+bevy = { version = "0.10", features = [] }
 #bevy-inspector-egui = { version = "0.4", optional = true }
 #bevy_egui = { version = "0.4", optional = true }
 #crossterm = { version = "0.19", optional = true}
