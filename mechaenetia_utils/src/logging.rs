@@ -63,8 +63,7 @@ impl From<TryInitError> for LoggerError {
 ///
 /// # Errors
 ///
-/// Will return `Err` if `filename` does not exist or the user does not have
-/// permission to read it.
+/// Returns an error if it fails to subscribe the logging system.
 pub fn init_logger(args: &LogArgs) -> Result<(), LoggerError> {
 	let builder = FmtSubscriber::builder()
 		.with_writer(std::io::stderr)
