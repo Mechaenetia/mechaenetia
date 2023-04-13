@@ -25,6 +25,7 @@ struct UIMainMenuCleanup;
 
 #[derive(Component)]
 enum UIMainMenuBtn {
+	StartGame,
 	Quit,
 }
 
@@ -82,6 +83,27 @@ fn spawn_main_menu(
 						..default()
 					});
 				});
+			// Direct Launch Test Game button
+			parent
+				.spawn((
+					ButtonBundle {
+						style: BUTTON_STYLE,
+						background_color: NORMAL_BUTTON_COLOR.into(),
+						..default()
+					},
+					UIMainMenuBtn::StartGame,
+				))
+				.with_children(|parent| {
+					parent.spawn(TextBundle {
+						text: Text {
+							sections: vec![TextSection::new("Start", get_button_text_style(&asset_server))],
+							alignment: TextAlignment::Center,
+							..default()
+						},
+						..default()
+					});
+				});
+			// Quit button
 			parent
 				.spawn((
 					ButtonBundle {
@@ -115,12 +137,21 @@ fn despawn_main_menu(mut commands: Commands, query: Query<Entity, With<UIMainMen
 fn interact_main_menu(
 	mut btn_query: Query<(&Interaction, &mut BackgroundColor, &UIMainMenuBtn), Changed<Interaction>>,
 	mut exit: EventWriter<AppExit>,
+	mut interface_state: ResMut<NextState<InterfaceState>>,
+	keyboard_input: Res<Input<KeyCode>>,
 ) {
+	if keyboard_input.just_pressed(KeyCode::Escape) {
+		exit.send(AppExit);
+		return;
+	}
 	for (interaction, mut background_color, btn) in btn_query.iter_mut() {
 		match interaction {
 			Interaction::Clicked => {
 				*background_color = CLICKED_BUTTON_COLOR.into();
 				match btn {
+					UIMainMenuBtn::StartGame => {
+						interface_state.set(InterfaceState::Sim);
+					}
 					UIMainMenuBtn::Quit => {
 						exit.send(AppExit);
 					}

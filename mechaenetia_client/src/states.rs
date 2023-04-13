@@ -4,13 +4,20 @@ use bevy::prelude::*;
 pub enum InterfaceState {
 	#[default]
 	MainMenu,
-	Game,
+	Sim,
 }
 
 pub struct StatePlugin;
 
 impl Plugin for StatePlugin {
 	fn build(&self, app: &mut App) {
-		app.add_state::<InterfaceState>();
+		app.add_state::<InterfaceState>()
+			.add_system(back_to_main_menu.in_set(OnUpdate(InterfaceState::Sim)));
+	}
+}
+
+fn back_to_main_menu(keyboard_input: Res<Input<KeyCode>>, mut state: ResMut<NextState<InterfaceState>>) {
+	if keyboard_input.just_pressed(KeyCode::Escape) {
+		state.set(InterfaceState::MainMenu);
 	}
 }

@@ -4,6 +4,7 @@
 use bevy::app::{PluginGroup, PluginGroupBuilder};
 
 pub mod main_menu;
+pub mod sim;
 pub mod states;
 
 pub struct ClientPlugins;
@@ -13,5 +14,6 @@ impl PluginGroup for ClientPlugins {
 		PluginGroupBuilder::start::<Self>()
 			.add(states::StatePlugin)
 			.add(main_menu::MainMenuPlugin)
+			.add(sim::SimClientPlugin)
 	}
 }

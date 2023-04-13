@@ -47,7 +47,9 @@ fn main() {
 					..Default::default()
 				}),
 		)
-		.add_plugins(EnginePlugins)
+		.add_plugins(EnginePlugins {
+			default_save_path: args.config_dir.unwrap_or_default().join("saves/default"),
+		})
 		.add_plugins(ClientPlugins)
 		.add_plugin(window_icon_handling::WindowIconPlugin("logo.png".into()))
 		.run();
