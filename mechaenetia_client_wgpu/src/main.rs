@@ -5,6 +5,7 @@ mod window_icon_handling;
 
 use bevy::prelude::*;
 use clap::Parser;
+use mechaenetia_client::ClientPlugins;
 use mechaenetia_engine::EnginePlugins;
 use mechaenetia_utils::logging;
 use std::path::PathBuf;
@@ -47,6 +48,7 @@ fn main() {
 				}),
 		)
 		.add_plugins(EnginePlugins)
+		.add_plugins(ClientPlugins)
 		.add_plugin(window_icon_handling::WindowIconPlugin("logo.png".into()))
 		.run();
 }

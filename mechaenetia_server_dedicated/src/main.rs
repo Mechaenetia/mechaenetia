@@ -1,4 +1,5 @@
 #![warn(clippy::pedantic)]
+#![allow(clippy::needless_pass_by_value)]
 
 use bevy::diagnostic::DiagnosticsPlugin;
 use bevy::prelude::*;
