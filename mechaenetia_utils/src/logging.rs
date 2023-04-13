@@ -37,7 +37,7 @@ pub enum LoggerError {
 impl std::fmt::Display for LoggerError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			LoggerError::TracingSubscriberInitError(e) => write!(f, "Tracing subscriber init error: {}", e),
+			LoggerError::TracingSubscriberInitError(e) => write!(f, "Tracing subscriber init error: {e}"),
 		}
 	}
 }
@@ -56,23 +56,36 @@ impl From<TryInitError> for LoggerError {
 	}
 }
 
+/// Initialize a general logging system built with `tracing` and `tracing-subscriber`.
+///
+/// It includes a convenient clap argument parser for the logging system to allow it
+/// to be configured from the command line.
+///
+/// # Errors
+///
+/// Will return `Err` if `filename` does not exist or the user does not have
+/// permission to read it.
 pub fn init_logger(args: &LogArgs) -> Result<(), LoggerError> {
 	let builder = FmtSubscriber::builder()
 		.with_writer(std::io::stderr)
 		.with_max_level(args.verbosity)
 		.with_level(true)
 		//.with_span_events(FmtSpan::FULL)
-		.with_span_events(match args.verbosity {
-			Level::ERROR => FmtSpan::NEW | FmtSpan::CLOSE,
-			Level::WARN => FmtSpan::NEW | FmtSpan::CLOSE,
-			Level::INFO => FmtSpan::NEW | FmtSpan::CLOSE,
-			Level::DEBUG => FmtSpan::FULL,
-			Level::TRACE => FmtSpan::FULL,
-		})
+		.with_span_events(
+			// Keep the individual choices for ease of modification
+			#[allow(clippy::match_same_arms)]
+			match args.verbosity {
+				Level::ERROR => FmtSpan::NEW | FmtSpan::CLOSE,
+				Level::WARN => FmtSpan::NEW | FmtSpan::CLOSE,
+				Level::INFO => FmtSpan::NEW | FmtSpan::CLOSE,
+				Level::DEBUG => FmtSpan::FULL,
+				Level::TRACE => FmtSpan::FULL,
+			},
+		)
 		.with_target(true)
 		.with_ansi(true)
 		.with_env_filter(EnvFilter::try_new(&args.log_filter).unwrap_or_else(|err| {
-			eprintln!("Invalid log filter: {}", err);
+			eprintln!("Invalid log filter: {err}");
 			EnvFilter::new(&args.log_filter)
 		}));
 	match args.log_format {

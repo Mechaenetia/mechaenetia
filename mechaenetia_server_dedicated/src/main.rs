@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use bevy::diagnostic::DiagnosticsPlugin;
 use bevy::prelude::*;
 use clap::Parser;
@@ -14,7 +16,7 @@ pub struct Args {
 	config_dir: Option<PathBuf>,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() {
 	let args = Args::parse();
 	// logging::init_logger(&args.log_args)?;
 	App::new()
@@ -27,5 +29,4 @@ fn main() -> anyhow::Result<()> {
 		.add_plugin(HierarchyPlugin)
 		.add_plugin(DiagnosticsPlugin)
 		.run();
-	Ok(())
 }

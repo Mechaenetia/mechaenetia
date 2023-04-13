@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use bevy::prelude::*;
 use clap::Parser;
 use mechaenetia_utils::logging;
@@ -13,9 +15,8 @@ pub struct Args {
 	config_dir: Option<PathBuf>,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() {
 	// let args = Args::parse();
 	// logging::init_logger(&args.log_args)?;
 	App::new().add_plugins(DefaultPlugins).run();
-	Ok(())
 }
