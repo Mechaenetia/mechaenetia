@@ -14,6 +14,10 @@ pub struct Args {
 	/// Path to a directory to store configuration files
 	#[clap(short, long)]
 	config_dir: Option<PathBuf>,
+
+	/// Hot reload assets by watching for changes
+	#[clap(long)]
+	hot_reload_assets: bool,
 }
 
 fn main() {
@@ -25,6 +29,10 @@ fn main() {
 			filter: args.log_args.log_filter,
 		})
 		.add_plugins(MinimalPlugins)
+		.add_plugin(AssetPlugin {
+			watch_for_changes: args.hot_reload_assets,
+			..Default::default()
+		})
 		.add_plugin(TransformPlugin)
 		.add_plugin(HierarchyPlugin)
 		.add_plugin(DiagnosticsPlugin)

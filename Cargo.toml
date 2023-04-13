@@ -53,6 +53,7 @@ bevy = { version = "0.10", features = [] }
 #intl-memoizer = "0.5"
 #tui = { version = "0.14", default-features = false, features = ['crossterm'], optional = true }
 #unic-langid = "0.9"
+winit = "0.28"
 
 #[dependencies]
 #anyhow.workspace = true

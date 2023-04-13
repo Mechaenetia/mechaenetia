@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Server Dynamic Load (no-debug)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --features bevy/dynamic_linking --bin mechaenetia_server_dedicated -- --config-dir ./config" />
+    <option name="command" value="run --features bevy/dynamic_linking --bin mechaenetia_server_dedicated -- --config-dir ./config --hot-reload-assets" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="emulateTerminal" value="false" />
     <option name="channel" value="DEFAULT" />

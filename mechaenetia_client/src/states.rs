@@ -1,17 +1,17 @@
 use bevy::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, States)]
-pub enum SimulationState {
+pub enum InterfaceState {
 	#[default]
 	NotLoaded,
-	Paused,
-	Running,
+	MainMenu,
+	Game,
 }
 
 pub struct StatePlugin;
 
 impl Plugin for StatePlugin {
 	fn build(&self, app: &mut App) {
-		app.add_state::<SimulationState>();
+		app.add_state::<InterfaceState>();
 	}
 }

@@ -13,3 +13,4 @@ mechaenetia_engine.workspace = true
 mechaenetia_server.workspace = true
 mechaenetia_utils.workspace = true
 tracing.workspace = true
+winit.workspace = true
