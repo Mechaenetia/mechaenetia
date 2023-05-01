@@ -25,7 +25,7 @@ pub struct LogArgs {
 	pub log_format: LogFormat,
 
 	/// Log filter format string
-	#[arg(long, env = "LOG_FILTER", default_value = "")]
+	#[arg(long, env = "LOG_FILTER", default_value = "wgpu=error")]
 	pub log_filter: String,
 }
 

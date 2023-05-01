@@ -8,3 +8,4 @@ authors.workspace = true
 bevy.workspace = true
 mechaenetia_engine.workspace = true
 tracing.workspace = true
+
