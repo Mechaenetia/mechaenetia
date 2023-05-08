@@ -7,6 +7,7 @@
 [workspace]
 resolver = "2"
 members = [
+	"xtask",
 	"mechaenetia_utils",
 	"mechaenetia_engine",
 	"mechaenetia_client",
@@ -17,6 +18,7 @@ members = [
 
 [workspace.package]
 version = "0.1.0"
+license = "GPL-3.0-or-later"
 authors = ["Gregorius Techneticies <gregoriustech@gmail.com>", "OvermindDL1 <overminddl1@gmail.com>"]
 
 [workspace.dependencies]

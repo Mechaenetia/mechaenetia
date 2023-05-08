@@ -3,6 +3,7 @@ name = "mechaenetia_utils"
 edition = "2021"
 version.workspace = true
 authors.workspace = true
+license.workspace = true
 
 [dependencies]
 clap.workspace = true
