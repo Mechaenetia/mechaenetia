@@ -1,8 +1,7 @@
 // From:  https://github.com/rust-lang/rust-analyzer/blob/3ffa915cbcf4d7a3988142cd94da0463acc87c8a/xtask/src/not_bash.rs
 
 //! A bad shell -- small cross platform module for writing glue code
-use anyhow::{bail, Context, Result};
-pub use fs_err as fs2;
+
 use std::{
 	cell::RefCell,
 	env,
@@ -11,41 +10,55 @@ use std::{
 	path::{Path, PathBuf},
 	process::{Command, Stdio},
 };
+
+use anyhow::{bail, Context, Result};
+
+pub use fs_err as fs2;
+
 #[macro_export]
-macro_rules! run { ($($expr:expr),*) => { run!($($expr),*; echo = true)
+macro_rules! run {
+    ($($expr:expr),*) => {
+        run!($($expr),*; echo = true)
     };
-    ($($expr:expr),* ; echo = $echo:expr) => { $crate::not_bash::run_process(format!($($expr),*),
-        $echo, None)
+    ($($expr:expr),* ; echo = $echo:expr) => {
+        $crate::not_bash::run_process(format!($($expr),*), $echo, None)
     };
-    ($($expr:expr),* ; <$stdin:expr) => { $crate::not_bash::run_process(format!($($expr),*), false,
-        Some($stdin))
+    ($($expr:expr),* ;  <$stdin:expr) => {
+        $crate::not_bash::run_process(format!($($expr),*), false, Some($stdin))
     };
 }
 pub use crate::run;
+
 pub struct Pushd {
 	_p: (),
 }
+
 pub fn pushd(path: impl Into<PathBuf>) -> Pushd {
 	Env::with(|env| env.pushd(path.into()));
 	Pushd { _p: () }
 }
+
 impl Drop for Pushd {
 	fn drop(&mut self) {
 		Env::with(|env| env.popd())
 	}
 }
+
 pub struct Pushenv {
 	_p: (),
 }
+
 pub fn pushenv(var: &str, value: &str) -> Pushenv {
 	Env::with(|env| env.pushenv(var.into(), value.into()));
 	Pushenv { _p: () }
 }
+
 impl Drop for Pushenv {
 	fn drop(&mut self) {
 		Env::with(|env| env.popenv())
 	}
 }
+
 pub fn rm_rf(path: impl AsRef<Path>) -> io::Result<()> {
 	let path = path.as_ref();
 	if !path.exists() {
@@ -57,20 +70,25 @@ pub fn rm_rf(path: impl AsRef<Path>) -> io::Result<()> {
 		fs2::remove_dir_all(path)
 	}
 }
+
 #[doc(hidden)]
 pub fn run_process(cmd: String, echo: bool, stdin: Option<&[u8]>) -> Result<String> {
 	run_process_inner(&cmd, echo, stdin).with_context(|| format!("process `{}` failed", cmd))
 }
+
 pub fn date_iso() -> Result<String> {
 	run!("date --iso --utc")
 }
+
 fn run_process_inner(cmd: &str, echo: bool, stdin: Option<&[u8]>) -> Result<String> {
 	let mut args = shelx(cmd);
 	let binary = args.remove(0);
 	let current_dir = Env::with(|it| it.cwd().to_path_buf());
+
 	if echo {
 		println!("> {}", cmd)
 	}
+
 	let mut command = Command::new(binary);
 	command.args(args).current_dir(current_dir).stderr(Stdio::inherit());
 	let output = match stdin {
@@ -83,14 +101,18 @@ fn run_process_inner(cmd: &str, echo: bool, stdin: Option<&[u8]>) -> Result<Stri
 		}
 	}?;
 	let stdout = String::from_utf8(output.stdout)?;
+
 	if echo {
 		print!("{}", stdout)
 	}
+
 	if !output.status.success() {
 		bail!("{}", output.status)
 	}
+
 	Ok(stdout.trim().to_string())
 }
+
 // FIXME: some real shell lexing here
 fn shelx(cmd: &str) -> Vec<String> {
 	let mut res = Vec::new();
@@ -105,19 +127,23 @@ fn shelx(cmd: &str) -> Vec<String> {
 	}
 	res
 }
+
 struct Env {
 	pushd_stack: Vec<PathBuf>,
 	pushenv_stack: Vec<(OsString, Option<OsString>)>,
 }
+
 impl Env {
 	fn with<F: FnOnce(&mut Env) -> T, T>(f: F) -> T {
-		thread_local! { static ENV: RefCell<Env>
-			= RefCell::new(Env {
-				pushd_stack: vec![env::current_dir().unwrap()], pushenv_stack: vec![],
+		thread_local! {
+			static ENV: RefCell<Env> = RefCell::new(Env {
+				pushd_stack: vec![env::current_dir().unwrap()],
+				pushenv_stack: vec![],
 			});
 		}
 		ENV.with(|it| f(&mut *it.borrow_mut()))
 	}
+
 	fn pushd(&mut self, dir: PathBuf) {
 		let dir = self.cwd().join(dir);
 		self.pushd_stack.push(dir);
