@@ -33,6 +33,7 @@
 # Rust Build files
 !/**/Cargo.toml
 !/rustfmt.toml
+!/.cargo/config.toml
 
 # Making an executable, so keep the lock file
 !/Cargo.lock
