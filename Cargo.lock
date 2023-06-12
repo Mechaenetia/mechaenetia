@@ -3940,4 +3940,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "fs-err",
+ "serde",
+ "serde_json",
 ]
