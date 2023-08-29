@@ -13,9 +13,9 @@ pub struct SimPlugin {
 impl Plugin for SimPlugin {
 	fn build(&self, app: &mut App) {
 		app.insert_resource(SimStorageLocation::new(self.default_save_path.clone()))
-			.add_system(init_sim.in_schedule(OnEnter(SimState::Loaded)))
-			.add_system(save_state_if_necessary.in_set(OnUpdate(SimState::Loaded)))
-			.add_system(unload_sim.in_schedule(OnExit(SimState::Loaded)));
+			.add_systems(OnEnter(SimState::Loaded), init_sim)
+			.add_systems(Update, save_state_if_necessary.run_if(in_state(SimState::Loaded)))
+			.add_systems(OnExit(SimState::Loaded), unload_sim);
 	}
 }
 

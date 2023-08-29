@@ -119,10 +119,8 @@ fn shelx(cmd: &str) -> Vec<String> {
 	for (string_piece, in_quotes) in cmd.split('\'').zip([false, true].iter().copied().cycle()) {
 		if in_quotes {
 			res.push(string_piece.to_string())
-		} else {
-			if !string_piece.is_empty() {
-				res.extend(string_piece.split_ascii_whitespace().map(|it| it.to_string()))
-			}
+		} else if !string_piece.is_empty() {
+			res.extend(string_piece.split_ascii_whitespace().map(|it| it.to_string()))
 		}
 	}
 	res
@@ -141,7 +139,7 @@ impl Env {
 				pushenv_stack: vec![],
 			});
 		}
-		ENV.with(|it| f(&mut *it.borrow_mut()))
+		ENV.with(|it| f(&mut it.borrow_mut()))
 	}
 
 	fn pushd(&mut self, dir: PathBuf) {

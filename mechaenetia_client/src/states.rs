@@ -12,7 +12,7 @@ pub struct StatePlugin;
 impl Plugin for StatePlugin {
 	fn build(&self, app: &mut App) {
 		app.add_state::<InterfaceState>()
-			.add_system(back_to_main_menu.in_set(OnUpdate(InterfaceState::Sim)));
+			.add_systems(Update, back_to_main_menu.run_if(in_state(InterfaceState::Sim)));
 	}
 }
 

@@ -3,6 +3,7 @@
 
 mod window_icon_handling;
 
+use bevy::asset::ChangeWatcher;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, SystemInformationDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::window::PresentMode;
@@ -11,6 +12,7 @@ use mechaenetia_client::ClientPlugins;
 use mechaenetia_engine::EnginePlugins;
 use mechaenetia_utils::logging;
 use std::path::PathBuf;
+use std::time::Duration;
 
 #[derive(Parser, Clone, Debug)]
 pub struct Args {
@@ -21,9 +23,9 @@ pub struct Args {
 	#[clap(short, long)]
 	config_dir: Option<PathBuf>,
 
-	/// Hot reload assets by watching for changes
+	/// Hot reload assets by watching for changes with delay of milliseconds
 	#[clap(long)]
-	hot_reload_assets: bool,
+	hot_reload_assets: Option<u64>,
 }
 
 fn main() {
@@ -46,7 +48,10 @@ fn main() {
 					close_when_requested: true,
 				})
 				.set(AssetPlugin {
-					watch_for_changes: args.hot_reload_assets,
+					watch_for_changes: args
+						.hot_reload_assets
+						.map(Duration::from_millis)
+						.and_then(ChangeWatcher::with_delay),
 					asset_folder: args
 						.config_dir
 						.as_ref()
@@ -54,14 +59,14 @@ fn main() {
 						.unwrap_or_else(|| "assets".to_owned()),
 				}),
 		)
-		.add_plugin(SystemInformationDiagnosticsPlugin)
-		.add_plugin(FrameTimeDiagnosticsPlugin)
+		.add_plugins(SystemInformationDiagnosticsPlugin)
+		.add_plugins(FrameTimeDiagnosticsPlugin)
 		// These system logs don't log on dynamic builds as a fair warning...
 		// .add_plugin(bevy::diagnostic::LogDiagnosticsPlugin::default())
 		.add_plugins(EnginePlugins {
 			default_save_path: args.config_dir.unwrap_or_default().join("saves/default"),
 		})
 		.add_plugins(ClientPlugins)
-		.add_plugin(window_icon_handling::WindowIconPlugin("logo.png".into()))
+		.add_plugins(window_icon_handling::WindowIconPlugin("logo.png".into()))
 		.run();
 }

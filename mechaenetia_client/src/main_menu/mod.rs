@@ -14,9 +14,9 @@ pub struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
 	fn build(&self, app: &mut App) {
-		app.add_system(spawn_main_menu.in_schedule(OnEnter(InterfaceState::MainMenu)))
-			.add_system(interact_main_menu.in_set(OnUpdate(InterfaceState::MainMenu)))
-			.add_system(despawn_main_menu.in_schedule(OnExit(InterfaceState::MainMenu)));
+		app.add_systems(OnEnter(InterfaceState::MainMenu), spawn_main_menu)
+			.add_systems(Update, interact_main_menu.run_if(in_state(InterfaceState::MainMenu)))
+			.add_systems(OnExit(InterfaceState::MainMenu), despawn_main_menu);
 	}
 }
 
@@ -144,9 +144,9 @@ fn interact_main_menu(
 		exit.send(AppExit);
 		return;
 	}
-	for (interaction, mut background_color, btn) in btn_query.iter_mut() {
+	for (interaction, mut background_color, btn) in &mut btn_query {
 		match interaction {
-			Interaction::Clicked => {
+			Interaction::Pressed => {
 				*background_color = CLICKED_BUTTON_COLOR.into();
 				match btn {
 					UIMainMenuBtn::StartGame => {
