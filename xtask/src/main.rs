@@ -1,16 +1,16 @@
+#![warn(clippy::pedantic)]
+
 use std::collections::HashMap;
 use xtask::not_bash::run;
 
 fn main() {
 	let mut args = std::env::args();
 	let _xtask_name = args.next().expect("first argument should always be the program name");
-	let Some(cmd) = args.next() else {
-        exit_with_help()
-    };
+	let Some(cmd) = args.next() else { exit_with_help() };
 	//std::env::vars().for_each(|(k, v)| println!("env: {k} -> {v}"));
 	match cmd.as_str() {
 		"--help" | "-h" => exit_with_help(),
-		"checks" => cmd_checks(args),
+		"checks" => cmd_checks(&mut args),
 		cmd => {
 			println!("Unknown command: {cmd}\n");
 			exit_with_help()
@@ -34,12 +34,23 @@ SUBCOMMANDS:
 	std::process::exit(1)
 }
 
-fn cmd_checks(_args: std::env::Args) {
+fn cmd_checks(_args: &mut std::env::Args) {
 	println!("Running checks...");
 	cmd_checks_licenses();
 }
 
 fn cmd_checks_licenses() {
+	#[derive(serde::Deserialize)]
+	struct Meta<'s> {
+		#[serde(borrow)]
+		packages: Vec<MetaPackage<'s>>,
+	}
+	#[derive(serde::Deserialize)]
+	struct MetaPackage<'s> {
+		#[serde(borrow)]
+		name: &'s str,
+		license: Option<&'s str>,
+	}
 	print!("> Licenses...");
 	let expected = [
 		"(MIT OR Apache-2.0) AND Unicode-DFS-2016",
@@ -86,17 +97,6 @@ fn cmd_checks_licenses() {
 	.collect::<HashMap<&'static str, &'static str>>();
 
 	let meta = run!("cargo metadata --format-version 1"; echo = false).unwrap();
-	#[derive(serde::Deserialize)]
-	struct Meta<'s> {
-		#[serde(borrow)]
-		packages: Vec<MetaPackage<'s>>,
-	}
-	#[derive(serde::Deserialize)]
-	struct MetaPackage<'s> {
-		#[serde(borrow)]
-		name: &'s str,
-		license: Option<&'s str>,
-	}
 	let meta: Meta = serde_json::from_str(&meta).unwrap();
 
 	let mut errors = String::new();
@@ -106,20 +106,17 @@ fn cmd_checks_licenses() {
 			if let Some(sc) = special_cased.get(name) {
 				if *sc == license {
 					continue;
-				} else {
-					errors.push_str(&format!("Special cased license for {}: {} != {}\n", name, license, sc));
 				}
+				errors.push_str(&format!("Special cased license for {name}: {license} != {sc}\n"));
 			}
 			if !expected.contains(&license) {
-				errors.push_str(&format!("Unknown license for {}: {}\n", name, license));
+				errors.push_str(&format!("Unknown license for {name}: {license}\n"));
 			}
 		} else {
-			errors.push_str(&format!("No license for {}\n", name));
+			errors.push_str(&format!("No license for {name}\n"));
 		}
 	}
-	if !errors.is_empty() {
-		panic!("Errors:\n{}", errors);
-	}
 
+	assert!(errors.is_empty(), "Errors:\n{errors}");
 	println!("Passed");
 }
