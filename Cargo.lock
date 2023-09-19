@@ -4112,7 +4112,5 @@ dependencies = [
  "anyhow",
  "fs-err",
  "semver",
- "serde",
- "serde_json",
  "time",
 ]
