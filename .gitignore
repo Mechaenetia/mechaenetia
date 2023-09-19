@@ -27,6 +27,9 @@
 !INSTALL*
 !README*
 
+# And License management file
+!deny.toml
+
 # Documentation files
 !*.md
 

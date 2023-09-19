@@ -23,11 +23,13 @@ authors = ["Gregorius Techneticies <gregoriustech@gmail.com>", "OvermindDL1 <ove
 
 [workspace.dependencies]
 # Workspace dependencies
-mechaenetia_client = { path = "mechaenetia_client" }
-mechaenetia_client_wgpu = { path = "mechaenetia_client_wgpu" }
-mechaenetia_engine = { path = "mechaenetia_engine" }
-mechaenetia_server = { path = "mechaenetia_server" }
-mechaenetia_utils = { path = "mechaenetia_utils" }
+# Keep mechaenetia versions compatible with the workspace.package.version
+mechaenetia_client = { version = "0", path = "mechaenetia_client" }
+mechaenetia_client_wgpu = { version = "0", path = "mechaenetia_client_wgpu" }
+mechaenetia_engine = { version = "0", path = "mechaenetia_engine" }
+mechaenetia_server = { version = "0", path = "mechaenetia_server" }
+mechaenetia_server_dedicated = { version = "0", path = "mechaenetia_server_dedicated" }
+mechaenetia_utils = { version = "0", path = "mechaenetia_utils" }
 # Base system dependencies
 anyhow = "1.0"
 clap = { version = "4.2", features = ["derive", "env"] }

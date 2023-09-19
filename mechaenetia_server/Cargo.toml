@@ -1,5 +1,6 @@
 [package]
 name = "mechaenetia_server"
+publish = false
 version.workspace = true
 authors.workspace = true
 license.workspace = true
