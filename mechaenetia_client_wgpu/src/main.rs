@@ -3,7 +3,6 @@
 
 mod window_icon_handling;
 
-use bevy::asset::ChangeWatcher;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, SystemInformationDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::window::PresentMode;
@@ -12,7 +11,6 @@ use mechaenetia_client::ClientPlugins;
 use mechaenetia_engine::EnginePlugins;
 use mechaenetia_utils::logging;
 use std::path::PathBuf;
-use std::time::Duration;
 
 #[derive(Parser, Clone, Debug)]
 pub struct Args {
@@ -24,8 +22,8 @@ pub struct Args {
 	config_dir: Option<PathBuf>,
 
 	/// Hot reload assets by watching for changes with delay of milliseconds
-	#[clap(long)]
-	hot_reload_assets: Option<u64>,
+	#[clap(long, default_value = "None")]
+	hot_reload_assets: Option<bool>,
 }
 
 fn main() {
@@ -37,6 +35,7 @@ fn main() {
 				.set(bevy::log::LogPlugin {
 					level: args.log_args.verbosity,
 					filter: args.log_args.log_filter,
+					update_subscriber: Some(|subscriber| subscriber),
 				})
 				.set(WindowPlugin {
 					primary_window: Some(Window {
@@ -48,15 +47,23 @@ fn main() {
 					close_when_requested: true,
 				})
 				.set(AssetPlugin {
-					watch_for_changes: args
-						.hot_reload_assets
-						.map(Duration::from_millis)
-						.and_then(ChangeWatcher::with_delay),
-					asset_folder: args
+					watch_for_changes_override: args.hot_reload_assets,
+					file_path: args
 						.config_dir
 						.as_ref()
 						.and_then(|p| p.join("assets").to_str().map(std::borrow::ToOwned::to_owned))
 						.unwrap_or_else(|| "assets".to_owned()),
+					processed_file_path: args
+						.config_dir
+						.as_ref()
+						.and_then(|p| {
+							p.join("imported_assets")
+								.join("Default")
+								.to_str()
+								.map(std::borrow::ToOwned::to_owned)
+						})
+						.unwrap_or_else(|| "imported_assets/Default".to_owned()),
+					mode: AssetMode::Unprocessed,
 				}),
 		)
 		.add_plugins(SystemInformationDiagnosticsPlugin)

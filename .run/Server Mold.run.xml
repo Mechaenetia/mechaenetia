@@ -1,7 +1,11 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Server Mold" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --bin mechaenetia_server_dedicated -- --config-dir .. --hot-reload-assets" />
+    <option name="command" value="run --bin mechaenetia_server_dedicated -- --config-dir .. --hot-reload-assets true" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+    <envs>
+      <env name="LD_PRELOAD" value="/usr/local/lib/mold/mold-wrapper.so" />
+      <env name="MOLD_PATH" value="/usr/local/bin/mold" />
+    </envs>
     <option name="emulateTerminal" value="false" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
@@ -9,10 +13,6 @@
     <option name="withSudo" value="false" />
     <option name="buildTarget" value="REMOTE" />
     <option name="backtrace" value="SHORT" />
-    <envs>
-      <env name="LD_PRELOAD" value="/usr/local/lib/mold/mold-wrapper.so" />
-      <env name="MOLD_PATH" value="/usr/local/bin/mold" />
-    </envs>
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
     <method v="2" />

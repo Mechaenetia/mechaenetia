@@ -72,7 +72,7 @@ fn spawn_main_menu(
 					parent.spawn(TextBundle {
 						text: Text {
 							sections: vec![TextSection::new("Mechaenetia", get_title_text_style(&asset_server))],
-							alignment: TextAlignment::Center,
+							justify: JustifyText::Center,
 							..default()
 						},
 						..default()
@@ -97,7 +97,7 @@ fn spawn_main_menu(
 					parent.spawn(TextBundle {
 						text: Text {
 							sections: vec![TextSection::new("Start", get_button_text_style(&asset_server))],
-							alignment: TextAlignment::Center,
+							justify: JustifyText::Center,
 							..default()
 						},
 						..default()
@@ -117,7 +117,7 @@ fn spawn_main_menu(
 					parent.spawn(TextBundle {
 						text: Text {
 							sections: vec![TextSection::new("Quit", get_button_text_style(&asset_server))],
-							alignment: TextAlignment::Center,
+							justify: JustifyText::Center,
 							..default()
 						},
 						..default()
@@ -138,7 +138,7 @@ fn interact_main_menu(
 	mut btn_query: Query<(&Interaction, &mut BackgroundColor, &UIMainMenuBtn), Changed<Interaction>>,
 	mut exit: EventWriter<AppExit>,
 	mut interface_state: ResMut<NextState<InterfaceState>>,
-	keyboard_input: Res<Input<KeyCode>>,
+	keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
 	if keyboard_input.just_pressed(KeyCode::Escape) {
 		exit.send(AppExit);

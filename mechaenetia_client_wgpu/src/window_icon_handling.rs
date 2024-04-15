@@ -34,10 +34,11 @@ fn set_primary_window_icon(
 		return;
 	};
 
-	if !image_asset_events.iter().any(|ev| match ev {
-		AssetEvent::Created { handle } if handle == &program_icon.0 => true,
-		AssetEvent::Modified { handle } if handle == &program_icon.0 => true,
-		AssetEvent::Removed { handle } if handle == &program_icon.0 => false,
+	if !image_asset_events.read().any(|ev| match ev {
+		AssetEvent::Added { id } if id == &program_icon.0.id() => true,
+		AssetEvent::LoadedWithDependencies { id } if id == &program_icon.0.id() => true,
+		AssetEvent::Modified { id } if id == &program_icon.0.id() => true,
+		AssetEvent::Removed { id } if id == &program_icon.0.id() => false,
 		_ => false,
 	}) {
 		return;

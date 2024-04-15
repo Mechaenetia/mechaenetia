@@ -11,12 +11,12 @@ pub struct StatePlugin;
 
 impl Plugin for StatePlugin {
 	fn build(&self, app: &mut App) {
-		app.add_state::<InterfaceState>()
+		app.init_state::<InterfaceState>()
 			.add_systems(Update, back_to_main_menu.run_if(in_state(InterfaceState::Sim)));
 	}
 }
 
-fn back_to_main_menu(keyboard_input: Res<Input<KeyCode>>, mut state: ResMut<NextState<InterfaceState>>) {
+fn back_to_main_menu(keyboard_input: Res<ButtonInput<KeyCode>>, mut state: ResMut<NextState<InterfaceState>>) {
 	if keyboard_input.just_pressed(KeyCode::Escape) {
 		state.set(InterfaceState::MainMenu);
 	}

@@ -1,8 +1,9 @@
 use crate::sim::chunks::{Chunk, ChunkPos};
+use std::collections::HashMap;
 // use bevy::prelude::*;
-use bevy::utils::StableHashMap;
+use bevy::utils::FixedState;
 
 pub struct Dimension {
 	pub name: String,
-	pub chunks: StableHashMap<ChunkPos, Chunk>,
+	pub chunks: HashMap<ChunkPos, Chunk, FixedState>,
 }
