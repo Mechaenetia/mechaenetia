@@ -5,7 +5,7 @@ use std::io::IsTerminal;
 use std::sync::OnceLock;
 use xtask::not_bash::run;
 
-const CARGODENY_REQUIRED_VERSION: &str = "^0.14.2";
+const CARGODENY_REQUIRED_VERSION: &str = "^0.14.21";
 
 static COLOR: OnceLock<&str> = OnceLock::new();
 
