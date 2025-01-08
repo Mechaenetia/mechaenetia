@@ -91,7 +91,7 @@ pub fn BUTTON_TEXT_FONT(asset_server: &Res<AssetServer>) -> TextFont {
 pub fn LOGO_NODE(asset_server: &Res<AssetServer>) -> (ImageNode, Node) {
 	(
 		ImageNode {
-			image: asset_server.load("logo.png").into(),
+			image: asset_server.load("logo.png"),
 			..default()
 		},
 		Node {
