@@ -48,7 +48,7 @@ fn main() {
 					close_when_requested: true,
 				})
 				.set(AssetPlugin {
-					watch_for_changes_override: args.hot_reload_assets,
+					watch_for_changes_override: Some(args.hot_reload_assets.unwrap_or(false)),
 					file_path: args
 						.config_dir
 						.as_ref()
