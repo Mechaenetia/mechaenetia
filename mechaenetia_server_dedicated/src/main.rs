@@ -1,6 +1,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::needless_pass_by_value)]
 
+use bevy::asset::AssetMetaCheck;
 use bevy::diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, SystemInformationDiagnosticsPlugin};
 use bevy::prelude::*;
 use clap::Parser;
@@ -30,7 +31,7 @@ fn main() {
 		.add_plugins(bevy::log::LogPlugin {
 			level: args.log_args.verbosity,
 			filter: args.log_args.log_filter,
-			update_subscriber: Some(|subscriber| subscriber),
+			custom_layer: |_app| None,
 		})
 		.add_plugins(MinimalPlugins)
 		.add_plugins(AssetPlugin {
@@ -51,6 +52,7 @@ fn main() {
 				})
 				.unwrap_or_else(|| "imported_assets/Default".to_owned()),
 			mode: AssetMode::Unprocessed,
+			meta_check: AssetMetaCheck::Always,
 		})
 		.add_plugins(TransformPlugin)
 		.add_plugins(HierarchyPlugin)

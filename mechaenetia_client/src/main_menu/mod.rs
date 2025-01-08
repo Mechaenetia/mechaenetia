@@ -1,11 +1,12 @@
 mod style;
 
 use crate::main_menu::style::{
-	get_button_text_style, get_title_text_style, BUTTON_STYLE, CLICKED_BUTTON_COLOR, HOVERED_BUTTON_COLOR,
-	MAIN_MENU_STYLE, NORMAL_BUTTON_COLOR, TITLE_IMAGE_STYLE, TITLE_STYLE,
+	BUTTON_TEXT_FONT, CLICKED_BUTTON_COLOR, HOVERED_BUTTON_COLOR, LOGO_NODE, MAIN_MENU_BUTTON_NODE, MAIN_MENU_NODE,
+	MAIN_MENU_TITLE_NODE, NORMAL_BUTTON_COLOR,
 };
 use crate::states::InterfaceState;
 use bevy::app::AppExit;
+use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
@@ -38,91 +39,68 @@ fn spawn_main_menu(
 ) {
 	let Ok(window) = window_query.get_single() else {
 		error!("Failed to get window size for main menu");
-		exit.send(AppExit);
+		exit.send(AppExit::error());
 		return;
 	};
 	commands.spawn((
-		Camera2dBundle {
-			transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
-			..default()
-		},
+		Camera2d,
+		Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
 		UIMainMenuCleanup,
 	));
 
 	commands
 		.spawn((
-			NodeBundle {
-				style: MAIN_MENU_STYLE,
+			Node {
+				width: Val::Percent(100.0),
+				height: Val::Percent(100.0),
+				align_items: AlignItems::Center,
+				justify_content: JustifyContent::Center,
 				..default()
 			},
 			UIMainMenuCleanup,
 		))
 		.with_children(|parent| {
-			parent
-				.spawn(NodeBundle {
-					style: TITLE_STYLE,
-					..default()
-				})
-				.with_children(|parent| {
-					parent.spawn(ImageBundle {
-						style: TITLE_IMAGE_STYLE,
-						image: asset_server.load("logo.png").into(),
-						..default()
-					});
-					parent.spawn(TextBundle {
-						text: Text {
-							sections: vec![TextSection::new("Mechaenetia", get_title_text_style(&asset_server))],
-							justify: JustifyText::Center,
+			parent.spawn(MAIN_MENU_NODE()).with_children(|parent| {
+				parent.spawn(MAIN_MENU_TITLE_NODE()).with_children(|parent| {
+					parent.spawn(LOGO_NODE(&asset_server));
+					parent
+						.spawn(Node {
+							justify_content: JustifyContent::Center,
 							..default()
-						},
-						..default()
-					});
-					parent.spawn(ImageBundle {
-						style: TITLE_IMAGE_STYLE,
-						image: asset_server.load("logo.png").into(),
-						..default()
-					});
+						})
+						.with_child((
+							Text::new("Mechaenetia!"),
+							TextFont {
+								font_size: 64.0,
+								..BUTTON_TEXT_FONT(&asset_server)
+							},
+							TextColor(css::WHITE.into()),
+						));
+					parent.spawn(LOGO_NODE(&asset_server));
 				});
-			// Direct Launch Test Game button
-			parent
-				.spawn((
-					ButtonBundle {
-						style: BUTTON_STYLE,
-						background_color: NORMAL_BUTTON_COLOR.into(),
-						..default()
-					},
-					UIMainMenuBtn::StartGame,
-				))
-				.with_children(|parent| {
-					parent.spawn(TextBundle {
-						text: Text {
-							sections: vec![TextSection::new("Start", get_button_text_style(&asset_server))],
-							justify: JustifyText::Center,
-							..default()
+				// Direct Launch Test Game button
+				parent
+					.spawn((
+						Button,
+						BackgroundColor::from(NORMAL_BUTTON_COLOR),
+						Node {
+							..MAIN_MENU_BUTTON_NODE()
 						},
-						..default()
-					});
-				});
-			// Quit button
-			parent
-				.spawn((
-					ButtonBundle {
-						style: BUTTON_STYLE,
-						background_color: NORMAL_BUTTON_COLOR.into(),
-						..default()
-					},
-					UIMainMenuBtn::Quit,
-				))
-				.with_children(|parent| {
-					parent.spawn(TextBundle {
-						text: Text {
-							sections: vec![TextSection::new("Quit", get_button_text_style(&asset_server))],
-							justify: JustifyText::Center,
-							..default()
+						UIMainMenuBtn::StartGame,
+					))
+					.with_child((Text::new("Start"), BUTTON_TEXT_FONT(&asset_server)));
+				// Quit button
+				parent
+					.spawn((
+						Button,
+						BackgroundColor::from(NORMAL_BUTTON_COLOR),
+						Node {
+							..MAIN_MENU_BUTTON_NODE()
 						},
-						..default()
-					});
-				});
+						UIMainMenuBtn::Quit,
+					))
+					.with_child((Text::new("Quit"), BUTTON_TEXT_FONT(&asset_server)));
+			});
 		});
 }
 
@@ -141,7 +119,7 @@ fn interact_main_menu(
 	keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
 	if keyboard_input.just_pressed(KeyCode::Escape) {
-		exit.send(AppExit);
+		exit.send(AppExit::Success);
 		return;
 	}
 	for (interaction, mut background_color, btn) in &mut btn_query {
@@ -153,7 +131,7 @@ fn interact_main_menu(
 						interface_state.set(InterfaceState::Sim);
 					}
 					UIMainMenuBtn::Quit => {
-						exit.send(AppExit);
+						exit.send(AppExit::Success);
 					}
 				}
 			}

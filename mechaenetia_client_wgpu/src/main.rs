@@ -3,6 +3,7 @@
 
 mod window_icon_handling;
 
+use bevy::asset::AssetMetaCheck;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, SystemInformationDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::window::PresentMode;
@@ -35,7 +36,7 @@ fn main() {
 				.set(bevy::log::LogPlugin {
 					level: args.log_args.verbosity,
 					filter: args.log_args.log_filter,
-					update_subscriber: Some(|subscriber| subscriber),
+					custom_layer: |_app| None,
 				})
 				.set(WindowPlugin {
 					primary_window: Some(Window {
@@ -64,6 +65,7 @@ fn main() {
 						})
 						.unwrap_or_else(|| "imported_assets/Default".to_owned()),
 					mode: AssetMode::Unprocessed,
+					meta_check: AssetMetaCheck::Always,
 				}),
 		)
 		.add_plugins(SystemInformationDiagnosticsPlugin)

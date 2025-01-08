@@ -8,7 +8,7 @@ impl Plugin for WindowIconPlugin {
 	fn build(&self, _app: &mut App) {}
 
 	fn cleanup(&self, app: &mut App) {
-		let Some(asset_server) = app.world.get_resource::<AssetServer>() else {
+		let Some(asset_server) = app.world().get_resource::<AssetServer>() else {
 			warn!("Failed to get asset server, not handling window icon");
 			return;
 		};
