@@ -10,6 +10,6 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-fs-err = "2.9.0"
-semver = "1.0.18"
-time = { version = "0.3.25", default-features = false, features = ["std"] }
+fs-err = "3"
+semver = "1.0"
+time = { version = "0.3", default-features = false, features = ["std"] }

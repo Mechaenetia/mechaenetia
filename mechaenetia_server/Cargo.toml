@@ -1,5 +1,6 @@
 [package]
 name = "mechaenetia_server"
+edition = "2021"
 publish = false
 version.workspace = true
 authors.workspace = true

@@ -7,13 +7,13 @@
 [workspace]
 resolver = "2"
 members = [
-	"xtask",
-	"mechaenetia_utils",
-	"mechaenetia_engine",
-	"mechaenetia_client",
-	"mechaenetia_client_wgpu",
-	"mechaenetia_server",
-	"mechaenetia_server_dedicated",
+    "xtask",
+    "mechaenetia_utils",
+    "mechaenetia_engine",
+    "mechaenetia_client",
+    "mechaenetia_client_wgpu",
+    "mechaenetia_server",
+    "mechaenetia_server_dedicated",
 ]
 
 [workspace.package]
@@ -30,6 +30,7 @@ mechaenetia_engine = { version = "0", path = "mechaenetia_engine" }
 mechaenetia_server = { version = "0", path = "mechaenetia_server" }
 mechaenetia_server_dedicated = { version = "0", path = "mechaenetia_server_dedicated" }
 mechaenetia_utils = { version = "0", path = "mechaenetia_utils" }
+
 # Base system dependencies
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive", "env"] }
@@ -46,9 +47,10 @@ tracing-subscriber = { version = "0.3", features = ["json", "env-filter", "regis
 # Game Data dependencies
 #indexmap = "1.6"
 #rayon = "1.5"
-smol_str = "0.2"
+#smol_str = "0.2"
+
 # Game Engine dependencies
-bevy = { version = "0.13", features = ["trace"] }
+bevy = { version = "0.15.1", features = ["trace"] }
 #bevy-inspector-egui = { version = "0.4", optional = true }
 #bevy_egui = { version = "0.4", optional = true }
 #crossterm = { version = "0.19", optional = true}
@@ -57,7 +59,7 @@ bevy = { version = "0.13", features = ["trace"] }
 #intl-memoizer = "0.5"
 #tui = { version = "0.14", default-features = false, features = ['crossterm'], optional = true }
 #unic-langid = "0.9"
-winit = "0.29"
+winit = "0.30"
 
 #[dependencies]
 #anyhow.workspace = true
