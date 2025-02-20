@@ -1,6 +1,6 @@
 name: Rust
 
-on: [push]
+on: [ push ]
 
 jobs:
   build:
@@ -8,10 +8,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Install OS libraries
-      run: sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev libxcb-shape0-dev libxcb-xfixes0-dev
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - uses: actions/checkout@v1
+      - name: Install OS libraries
+        run: sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev libxcb-shape0-dev libxcb-xfixes0-dev
+      - name: Update Rust
+        run: rustup update
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
