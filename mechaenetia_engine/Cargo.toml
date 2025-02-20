@@ -9,4 +9,5 @@ license.workspace = true
 
 [dependencies]
 bevy.workspace = true
+big_space.workspace = true
 tracing.workspace = true

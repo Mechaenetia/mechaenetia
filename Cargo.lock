@@ -1309,6 +1309,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "big_space"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2abc8619b2abb81f4030d555b6157681cb7edc33ba30150ff4b88f5f7c231adf"
+dependencies = [
+ "bevy_app",
+ "bevy_ecs",
+ "bevy_hierarchy",
+ "bevy_math",
+ "bevy_reflect",
+ "bevy_tasks",
+ "bevy_transform",
+ "bevy_utils",
+ "smallvec",
+ "tracing",
+]
+
+[[package]]
 name = "bindgen"
 version = "0.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2803,6 +2821,7 @@ name = "mechaenetia_engine"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "big_space",
  "tracing",
 ]
 
