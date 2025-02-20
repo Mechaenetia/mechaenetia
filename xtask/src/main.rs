@@ -98,7 +98,7 @@ fn cmd_checks_cargo_deny() -> anyhow::Result<()> {
 	}
 	let color = COLOR.get().expect("COLOR must be set exactly once");
 	match cmd!(sh, "cargo-deny --color {color} check all").run() {
-		Ok(_) => (),
+		Ok(()) => (),
 		Err(_e) => {
 			eprintln!("cargo-deny failed, please correct prior errors");
 		}

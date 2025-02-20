@@ -13,7 +13,13 @@ jobs:
         run: sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev libxcb-shape0-dev libxcb-xfixes0-dev
       - name: Update Rust
         run: rustup update
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Build
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose
+      - name: `cargo-deny` needed for checks
+        run: cargo install --locked cargo-deny
+      - name: Run checks
+        run: cargo xtask checks

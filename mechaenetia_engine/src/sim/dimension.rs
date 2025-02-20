@@ -1,3 +1,5 @@
+#![expect(clippy::zero_sized_map_values)]
+
 use crate::sim::chunks::{Chunk, ChunkPos};
 use std::collections::HashMap;
 // use bevy::prelude::*;
