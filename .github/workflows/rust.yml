@@ -19,7 +19,7 @@ jobs:
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose
-      - name: `cargo-deny` needed for checks
+      - name: "`cargo-deny` needed for checks"
         run: cargo install --locked cargo-deny
       - name: Run checks
         run: cargo xtask checks
