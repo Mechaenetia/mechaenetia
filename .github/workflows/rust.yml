@@ -1,4 +1,4 @@
-name: Rust
+name: Build and check entire project
 
 on: [ push ]
 
