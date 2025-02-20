@@ -1,6 +1,7 @@
 [package]
 name = "mechaenetia_utils"
-edition = "2021"
+edition = "2024"
+rust-version = "1.85"
 publish = false
 version.workspace = true
 authors.workspace = true

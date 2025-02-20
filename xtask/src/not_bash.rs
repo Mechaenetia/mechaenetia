@@ -11,7 +11,7 @@ use std::{
 	process::{Command, Stdio},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 pub use fs_err as fs2;
 
@@ -161,13 +161,16 @@ impl Env {
 	}
 	fn push_env(&mut self, var: OsString, value: OsString) {
 		self.push_env_stack.push((var.clone(), env::var_os(&var)));
-		env::set_var(var, value);
+		// TODO: Audit that the environment access only happens in single-threaded code.
+		unsafe { env::set_var(var, value) };
 	}
 	fn pop_env(&mut self) {
 		let (var, value) = self.push_env_stack.pop().unwrap();
 		match value {
-			None => env::remove_var(var),
-			Some(value) => env::set_var(var, value),
+			// TODO: Audit that the environment access only happens in single-threaded code.
+			None => unsafe { env::remove_var(var) },
+			// TODO: Audit that the environment access only happens in single-threaded code.
+			Some(value) => unsafe { env::set_var(var, value) },
 		}
 	}
 	fn cwd(&self) -> &Path {

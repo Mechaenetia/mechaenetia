@@ -5,8 +5,8 @@ use bevy::asset::AssetMetaCheck;
 use bevy::diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, SystemInformationDiagnosticsPlugin};
 use bevy::prelude::*;
 use clap::Parser;
-use mechaenetia_engine::states::SimState;
 use mechaenetia_engine::EnginePlugins;
+use mechaenetia_engine::states::SimState;
 use mechaenetia_utils::logging;
 use std::path::PathBuf;
 
