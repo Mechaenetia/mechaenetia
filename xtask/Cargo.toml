@@ -11,6 +11,5 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-fs-err = "3"
 semver = "1.0"
-time = { version = "0.3", default-features = false, features = ["std"] }
+xshell = "0.2.7"
