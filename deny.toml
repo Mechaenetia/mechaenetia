@@ -1,15 +1,12 @@
 [advisories]
-db-path = "~/.cargo/advisory-db"
-db-urls = ["https://github.com/rustsec/advisory-db"]
-vulnerability = "deny"
-unmaintained = "warn"
-yanked = "deny"
-notice = "warn"
-ignore = []
+ignore = [
+    { id = "RUSTSEC-2024-0384", reason = "`instant` is unmaintained but dependencies haven't updated passed it yet" }
+]
 
 [licenses]
-# The lint level for crates which do not have a detectable license
-unlicensed = "deny"
+# List of explicitly allowed licenses
+# See https://spdx.org/licenses/ for list of possible licenses
+# [possible values: any SPDX 3.11 short identifier (+ optional exception)].
 allow = [
     "MIT",
     "MIT-0",
@@ -19,25 +16,9 @@ allow = [
     "Zlib",
     "CC0-1.0",
     "ISC",
-    "Unicode-DFS-2016",
+    "Unicode-3.0",
 ]
-# List of explicitly disallowed licenses
-# See https://spdx.org/licenses/ for list of possible licenses
-# [possible values: any SPDX 3.11 short identifier (+ optional exception)].
-deny = []
-copyleft = "deny"
-# Blanket approval or denial for OSI-approved or FSF Free/Libre licenses
-# * both - The license will be approved if it is both OSI-approved *AND* FSF
-# * either - The license will be approved if it is either OSI-approved *OR* FSF
-# * osi - The license will be approved if it is OSI approved
-# * fsf - The license will be approved if it is FSF Free
-# * osi-only - The license will be approved if it is OSI-approved *AND NOT* FSF
-# * fsf-only - The license will be approved if it is FSF *AND NOT* OSI-approved
-# * neither - This predicate is ignored and the default lint level is used
-# We are doing "neither" since we are using the "allow" and "deny" lists above
-allow-osi-fsf-free = "neither"
-default = "deny"
-confidence-threshold = 1.0 # 0.8
+confidence-threshold = 1.0
 exceptions = [
     # Marked as `publish=false` and thus `licenses.private.ignore=true` below
     # { allow = ["GPL-3.0"], name = "mechaenetia_client", version = "*" },
@@ -50,39 +31,41 @@ exceptions = [
 ]
 
 [licenses.private]
-# If true, ignores workspace crates that aren't published, or are only
-# published to private registries.
-# To see how to mark a crate as unpublished (to the official registry),
-# visit https://doc.rust-lang.org/cargo/reference/manifest.html#the-publish-field.
-# This is true since the mechaenetia crates are not published to the official registry.
 ignore = true
 
 [bans]
-# Lint level for when a crate version requirement is `*`
 wildcards = "deny"
 
 # TODO:  Wtf bevy... like really?!?  Check this later to remove these when that's fixed...
 skip = [
-    { name = "ahash" },
     { name = "base64" },
+    { name = "bit-set" },
+    { name = "bit-vec" },
     { name = "bitflags" },
-    { name = "core-foundation-sys" },
+    { name = "cfg_aliases" },
+    { name = "core-foundation" },
+    { name = "event-listener" },
+    { name = "fixedbitset" },
     { name = "hashbrown" },
-    { name = "indexmap" },
-    { name = "jni" },
-    { name = "libloading" },
-    { name = "nix" },
-    { name = "num_enum" },
-    { name = "num_enum_derive" },
+    { name = "inotify" },
+    { name = "ndk" },
+    { name = "ndk-sys" },
+    { name = "redox_syscall" },
     { name = "regex-automata" },
     { name = "regex-syntax" },
-    { name = "syn" },
+    { name = "ttf-parser" },
     { name = "windows" },
+    { name = "windows-core" },
+    { name = "windows-implement" },
+    { name = "windows-interface" },
+    { name = "windows-result" },
+    { name = "windows-strings" },
     { name = "windows-sys" },
     { name = "windows-targets" },
     { name = "windows_aarch64_gnullvm" },
     { name = "windows_aarch64_msvc" },
     { name = "windows_i686_gnu" },
+    { name = "windows_i686_gnullvm" },
     { name = "windows_i686_msvc" },
     { name = "windows_x86_64_gnu" },
     { name = "windows_x86_64_gnullvm" },
